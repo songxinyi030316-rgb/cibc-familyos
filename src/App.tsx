@@ -1,0 +1,2270 @@
+import {
+  AlertTriangle,
+  Bell,
+  CalendarClock,
+  CheckCircle2,
+  ChevronRight,
+  CircleDollarSign,
+  ClipboardCheck,
+  CreditCard,
+  FileText,
+  Gauge,
+  GraduationCap,
+  HeartPulse,
+  Home,
+  Landmark,
+  LayoutDashboard,
+  LockKeyhole,
+  PiggyBank,
+  ReceiptText,
+  ScrollText,
+  Search,
+  Settings,
+  SlidersHorizontal,
+  ShieldCheck,
+  Sparkles,
+  Upload,
+  UsersRound,
+  WalletCards
+} from "lucide-react";
+import { useState } from "react";
+import type { LucideIcon } from "lucide-react";
+import type { FormEvent, ReactNode } from "react";
+import heroImage from "../assets/familyos-hero.png";
+import onboardingImage from "../assets/familyos-onboarding.png";
+import educationImage from "../assets/familyos-education.png";
+import caregivingImage from "../assets/familyos-caregiving.png";
+import legacyImage from "../assets/familyos-legacy.png";
+import subscriptionImage from "../assets/familyos-subscriptions.png";
+
+type Route =
+  | "landing"
+  | "auth"
+  | "onboarding"
+  | "overview"
+  | "family"
+  | "accounts"
+  | "goals"
+  | "education"
+  | "housing"
+  | "cashflow"
+  | "subscriptions"
+  | "caregiving"
+  | "protection"
+  | "investments"
+  | "legacy"
+  | "documents"
+  | "permissions"
+  | "insights"
+  | "settings";
+
+type FamilyMember = {
+  name: string;
+  relationship: string;
+  age?: number;
+  role: string;
+  access: string;
+  goal: string;
+};
+
+const familyMembers: FamilyMember[] = [
+  {
+    name: "Alex Chen",
+    relationship: "Primary user",
+    age: 42,
+    role: "Parent",
+    access: "Joint Account Access",
+    goal: "Mortgage renewal readiness"
+  },
+  {
+    name: "Jamie Chen",
+    relationship: "Spouse",
+    age: 40,
+    role: "Partner",
+    access: "Limited Actions",
+    goal: "Shared bills and insurance"
+  },
+  {
+    name: "Emma Chen",
+    relationship: "Daughter",
+    age: 17,
+    role: "Student",
+    access: "View Only",
+    goal: "University transition"
+  },
+  {
+    name: "Ethan Chen",
+    relationship: "Son",
+    age: 11,
+    role: "Dependent",
+    access: "No Access",
+    goal: "Future RESP planning"
+  },
+  {
+    name: "Grace Chen",
+    relationship: "Parent / Elder",
+    age: 72,
+    role: "Care recipient",
+    access: "Caregiver Mode",
+    goal: "Care budget stability"
+  }
+];
+
+const navItems: { route: Route; label: string; icon: LucideIcon }[] = [
+  { route: "family", label: "Family Dashboard", icon: UsersRound },
+  { route: "accounts", label: "Accounts", icon: WalletCards },
+  { route: "goals", label: "Goals", icon: Gauge },
+  { route: "education", label: "Education Planner", icon: GraduationCap },
+  { route: "housing", label: "Housing Hub", icon: Home },
+  { route: "cashflow", label: "Cash Flow", icon: CircleDollarSign },
+  { route: "subscriptions", label: "Subscription Control", icon: ReceiptText },
+  { route: "caregiving", label: "Caregiving Mode", icon: HeartPulse },
+  { route: "protection", label: "Insurance & Protection", icon: ShieldCheck },
+  { route: "investments", label: "Investments", icon: PiggyBank },
+  { route: "legacy", label: "Wealth & Legacy", icon: ScrollText },
+  { route: "documents", label: "Documents", icon: FileText },
+  { route: "permissions", label: "Permissions", icon: LockKeyhole },
+  { route: "insights", label: "AI Insights", icon: Sparkles },
+  { route: "settings", label: "Settings", icon: Settings }
+];
+
+const readinessStatuses = [
+  ["Housing", "On Track"],
+  ["Education", "Needs Review"],
+  ["Cash Flow", "On Track"],
+  ["Caregiving", "Action Recommended"],
+  ["Protection", "Needs Review"],
+  ["Retirement", "Needs Review"],
+  ["Legacy", "Missing Info"],
+  ["Subscriptions", "Action Recommended"]
+];
+
+const planningProgress = [
+  ["Housing readiness", 86],
+  ["Education planning", 64],
+  ["Emergency reserve", 72],
+  ["Caregiving support", 61],
+  ["Protection coverage", 70],
+  ["Legacy readiness", 48]
+];
+
+const subscriptions = [
+  {
+    merchant: "Netflix Family Plan",
+    amount: "$20.99/month",
+    method: "Jamie's card",
+    owner: "Jamie",
+    status: "Active",
+    nextBilling: "June 29",
+    action: "Review overlap"
+  },
+  {
+    merchant: "Spotify Family",
+    amount: "$18.99/month",
+    method: "Alex's card",
+    owner: "Alex",
+    status: "Active",
+    nextBilling: "July 3",
+    action: "Keep"
+  },
+  {
+    merchant: "Disney+",
+    amount: "$14.99/month",
+    method: "Alex's card",
+    owner: "Alex",
+    status: "Active",
+    nextBilling: "June 27",
+    action: "Compare usage"
+  },
+  {
+    merchant: "Adobe Creative Cloud",
+    amount: "$29.99/month",
+    method: "Family student card",
+    owner: "Emma",
+    status: "Low recent usage",
+    nextBilling: "July 1",
+    action: "Confirm with Emma"
+  },
+  {
+    merchant: "iCloud Storage",
+    amount: "$12.99/month",
+    method: "Family shared",
+    owner: "Family",
+    status: "Shared utility",
+    nextBilling: "June 25",
+    action: "Keep"
+  },
+  {
+    merchant: "GoodLife Fitness",
+    amount: "$69.99/month",
+    method: "Alex's card",
+    owner: "Alex",
+    status: "Price changed",
+    nextBilling: "June 30",
+    action: "Review increase"
+  },
+  {
+    merchant: "Meal Kit Trial",
+    amount: "$0 now, $89.99 starts",
+    method: "Virtual trial card",
+    owner: "Jamie",
+    status: "Trial ends in 4 days",
+    nextBilling: "June 23",
+    action: "Cancel or cap"
+  },
+  {
+    merchant: "Streaming Sports Trial",
+    amount: "$0 now, $24.99 starts",
+    method: "Alex's card",
+    owner: "Alex",
+    status: "Trial ends in 2 days",
+    nextBilling: "June 21",
+    action: "Cancel or cap"
+  }
+];
+
+const aiInsights = [
+  {
+    category: "Education",
+    title: "Emma's university living costs may exceed current savings plan",
+    body: "Projected first-year cost is $28,500. Current RESP path may fall short by $7,800.",
+    confidence: "High",
+    source: "Verified CIBC RESP balance + self-reported university target",
+    action: "Adjust Education Plan"
+  },
+  {
+    category: "Subscriptions",
+    title: "Two free trials convert to paid plans this week",
+    body: "Meal Kit Trial converts in 4 days and Streaming Sports Trial converts in 2 days.",
+    confidence: "High",
+    source: "Verified CIBC card transactions and recurring merchant pattern",
+    action: "Open Subscription Control"
+  },
+  {
+    category: "Subscriptions",
+    title: "Recurring payment review could reduce monthly spend",
+    body: "Your family could save approximately $96/month by reviewing unused or duplicate subscriptions.",
+    confidence: "Medium",
+    source: "Verified CIBC card transactions + subscription usage signals",
+    action: "Review Savings"
+  },
+  {
+    category: "Caregiving",
+    title: "Grace's care spending increased this quarter",
+    body: "Care-related spending is up 18% compared with last quarter, led by pharmacy and home support.",
+    confidence: "Medium",
+    source: "Permissioned care budget activity",
+    action: "Review Care Budget"
+  },
+  {
+    category: "Housing",
+    title: "Mortgage renewal window is approaching",
+    body: "Renewal is in 14 months. FamilyOS recommends preparing 6 months before renewal.",
+    confidence: "High",
+    source: "Verified CIBC mortgage data",
+    action: "Open Housing Hub"
+  },
+  {
+    category: "Cash Flow",
+    title: "Emergency fund is below family target",
+    body: "Current emergency fund covers 2.1 months of expenses. Recommended target is 4-6 months.",
+    confidence: "High",
+    source: "Verified balances + self-reported family expenses",
+    action: "Build Reserve"
+  },
+  {
+    category: "Investments",
+    title: "A 2-year non-cashable GIC may align with Emma's education timeline",
+    body: "A shorter locked option could support planned education funding without committing funds beyond the expected university start window.",
+    confidence: "Medium",
+    source: "Verified CIBC RESP + self-reported education timeline",
+    action: "Compare Education GIC Options"
+  },
+  {
+    category: "Investments",
+    title: "Emergency reserve funds may need a flexible option",
+    body: "Funds intended for emergencies or caregiving should avoid long lock-in periods unless enough liquid cash remains available.",
+    confidence: "High",
+    source: "Verified savings balance + self-reported household expenses",
+    action: "Compare Liquidity Options"
+  },
+  {
+    category: "Investments",
+    title: "TFSA contribution room may support tax-efficient growth",
+    body: "TFSA contribution room may allow more efficient growth if limits and eligibility are confirmed.",
+    confidence: "Medium",
+    source: "Verified CIBC TFSA summary + missing external contribution history",
+    action: "Review TFSA Scenario"
+  },
+  {
+    category: "Subscriptions",
+    title: "Merchant-specific caps can reduce trial surprises",
+    body: "A virtual trial card with a $1 cap or 14-day expiry may help prevent trial subscriptions from converting unexpectedly.",
+    confidence: "High",
+    source: "Verified CIBC card controls + merchant recurring payment detection",
+    action: "Create Trial Card"
+  },
+  {
+    category: "Protection",
+    title: "Life insurance may be below household need",
+    body: "Coverage may not fully reflect mortgage balance, dependents, and Grace's care reserve needs.",
+    confidence: "Medium",
+    source: "Self-reported policy values + verified liabilities",
+    action: "Book Advisor Review"
+  },
+  {
+    category: "Wealth & Legacy",
+    title: "Estate documents need a refresh",
+    body: "Beneficiaries have not been reviewed in 2 years and Grace's POA document is missing.",
+    confidence: "Medium",
+    source: "Document vault status + missing information",
+    action: "Update Vault"
+  }
+];
+
+const tasks = [
+  "RESP contribution review",
+  "Review 2 free trials before they convert",
+  "Upload will / estate documents",
+  "Review insurance coverage",
+  "Confirm Grace's unusual transaction",
+  "Prepare Emma's university rent budget"
+];
+
+const featureCards: { title: string; text: string; icon: LucideIcon }[] = [
+  {
+    title: "Family Financial Dashboard",
+    text: "A household-level view of balances, goals, roles, and upcoming decisions.",
+    icon: LayoutDashboard
+  },
+  {
+    title: "Education-to-Independence Planner",
+    text: "Plan RESP, rent, student banking, and first-year cash flow in one path.",
+    icon: GraduationCap
+  },
+  {
+    title: "Subscription Control",
+    text: "Detect free trials, duplicate subscriptions, recurring payments, and merchant-specific card controls.",
+    icon: ReceiptText
+  },
+  {
+    title: "Caregiving Mode",
+    text: "Support aging parents with permissioned visibility and approved actions.",
+    icon: HeartPulse
+  },
+  {
+    title: "Family Wealth & Legacy Map",
+    text: "Organize beneficiaries, documents, contacts, and wealth transfer readiness.",
+    icon: ScrollText
+  },
+  {
+    title: "AI Family Insights",
+    text: "Transparent recommendations that distinguish verified, self-reported, and missing data.",
+    icon: Sparkles
+  }
+];
+
+const gicRates = {
+  Cashable: {
+    "90 days": 2.65,
+    "180 days": 2.85,
+    "1 year": 3.1,
+    "2 years": 3.0,
+    "3 years": 2.95,
+    "5 years": 2.9
+  },
+  "Non-cashable": {
+    "90 days": 3.35,
+    "180 days": 3.65,
+    "1 year": 4.1,
+    "2 years": 4.0,
+    "3 years": 3.85,
+    "5 years": 3.7
+  },
+  "Escalating rate": {
+    "90 days": 3.0,
+    "180 days": 3.0,
+    "1 year": 3.0,
+    "2 years": 3.35,
+    "3 years": [3.0, 3.75, 4.5],
+    "5 years": [3.0, 3.4, 3.8, 4.2, 4.6]
+  }
+} as const;
+
+const gicTermYears: Record<string, number> = {
+  "90 days": 90 / 365,
+  "180 days": 180 / 365,
+  "1 year": 1,
+  "2 years": 2,
+  "3 years": 3,
+  "5 years": 5
+};
+
+type GicType = keyof typeof gicRates;
+
+type GicScenario = {
+  amount: number;
+  accountType: string;
+  gicType: GicType;
+  term: string;
+  payout: string;
+  goal: string;
+};
+
+const recommendedGicOptions: Array<GicScenario & { title: string; suggestedAmount: number; why: string }> = [
+  {
+    title: "Best Balance",
+    amount: 25000,
+    suggestedAmount: 25000,
+    accountType: "RESP",
+    gicType: "Non-cashable",
+    term: "2 years",
+    payout: "Paid at maturity",
+    goal: "Emma's education",
+    why: "Matches Emma's education timeline while offering a higher projected return than cashable options."
+  },
+  {
+    title: "Best Liquidity",
+    amount: 15000,
+    suggestedAmount: 15000,
+    accountType: "TFSA",
+    gicType: "Cashable",
+    term: "1 year",
+    payout: "Paid at maturity",
+    goal: "Emergency reserve",
+    why: "Useful for emergency reserve because funds may be accessed earlier."
+  },
+  {
+    title: "Best Long-Term Growth",
+    amount: 30000,
+    suggestedAmount: 30000,
+    accountType: "TFSA",
+    gicType: "Escalating rate",
+    term: "5 years",
+    payout: "Annual",
+    goal: "Retirement",
+    why: "May support longer-term family goals such as retirement or future home upgrades."
+  }
+];
+
+const getRate = (gicType: GicType, term: string): number | readonly number[] =>
+  gicRates[gicType][term as keyof (typeof gicRates)[GicType]] as number | readonly number[];
+
+const calculateGicProjection = (scenario: GicScenario) => {
+  const years = gicTermYears[scenario.term] ?? 1;
+  const rate = getRate(scenario.gicType, scenario.term);
+  let maturityValue = scenario.amount;
+
+  if (Array.isArray(rate)) {
+    const usableRates = rate.slice(0, Math.max(1, Math.round(years)));
+    usableRates.forEach((yearRate) => {
+      maturityValue *= 1 + yearRate / 100;
+    });
+  } else {
+    const fixedRate = rate as number;
+    if (scenario.payout === "Monthly") {
+      maturityValue = scenario.amount * Math.pow(1 + fixedRate / 100 / 12, years * 12);
+    } else if (scenario.payout === "Annual" && years >= 1) {
+      maturityValue = scenario.amount * Math.pow(1 + fixedRate / 100, years);
+    } else {
+      maturityValue = scenario.amount * (1 + (fixedRate / 100) * years);
+    }
+  }
+
+  const interest = maturityValue - scenario.amount;
+  const effectiveReturn = years > 0 ? (Math.pow(maturityValue / scenario.amount, 1 / years) - 1) * 100 : 0;
+
+  return {
+    annualRate: Array.isArray(rate) ? rate.reduce((sum, item) => sum + item, 0) / rate.length : rate,
+    interest,
+    maturityValue,
+    effectiveReturn
+  };
+};
+
+const liquidityForScenario = (scenario: GicScenario) => {
+  if (scenario.gicType === "Cashable") return "Flexible access after initial holding period";
+  if (scenario.term === "90 days" || scenario.term === "180 days") return "Short lock-in";
+  return "Locked until maturity";
+};
+
+const goalFitForScenario = (scenario: GicScenario) => {
+  if (scenario.goal === "Emergency reserve" && scenario.gicType === "Cashable") return "Strong fit for emergency liquidity";
+  if (scenario.goal === "Emma's education" && scenario.term === "1 year") return "Strong fit for Emma's education timeline";
+  if (scenario.goal === "Emma's education" && scenario.term === "2 years") return "Good fit if funds are not needed immediately";
+  if (scenario.goal === "Caregiving reserve" && scenario.gicType !== "Cashable") return "Use caution because care costs can be unpredictable";
+  if (scenario.goal === "Retirement" && scenario.gicType === "Escalating rate") return "Strong fit for longer-term family planning";
+  return "Good fit for planned savings if liquidity needs are reviewed";
+};
+
+const taxNoteForAccount = (accountType: string) => {
+  if (accountType === "TFSA") return "TFSA growth may be tax-free subject to contribution room.";
+  if (accountType === "RRSP") return "RRSP growth may be tax-deferred, with withdrawals taxable under applicable rules.";
+  if (accountType === "RESP") return "RESP treatment depends on plan rules, grants, and education withdrawals.";
+  return "Interest in non-registered accounts may be taxable and should be reviewed with an advisor.";
+};
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+    maximumFractionDigits: 0
+  }).format(value);
+
+export default function App() {
+  const [route, setRoute] = useAppRoute();
+  const [authTab, setAuthTab] = useState<"signin" | "create">("signin");
+
+  if (route === "landing") {
+    return (
+      <LandingPage
+        onSignIn={() => {
+          setAuthTab("signin");
+          setRoute("auth");
+        }}
+        onCreate={() => {
+          setAuthTab("create");
+          setRoute("auth");
+        }}
+      />
+    );
+  }
+
+  if (route === "auth") {
+    return <AuthPage initialTab={authTab} onNavigate={setRoute} />;
+  }
+
+  if (route === "onboarding") {
+    return <OnboardingPage onNavigate={setRoute} />;
+  }
+
+  return (
+    <DashboardShell route={route} onNavigate={setRoute}>
+      {renderRoute(route, setRoute)}
+    </DashboardShell>
+  );
+}
+
+function useAppRoute(): [Route, (route: Route) => void] {
+  const [route, setRoute] = useState<Route>("landing");
+  return [route, setRoute];
+}
+
+function LandingPage({ onSignIn, onCreate }: { onSignIn: () => void; onCreate: () => void }) {
+  return (
+    <main className="landing">
+      <nav className="landing-nav">
+        <BrandMark />
+        <button className="ghost-button" onClick={onSignIn}>
+          Sign In
+        </button>
+      </nav>
+      <section className="hero">
+        <div className="hero-copy">
+          <div className="eyebrow">
+            <ShieldCheck size={16} />
+            Consent-based family banking
+          </div>
+          <h1>Manage your family's financial life in one place.</h1>
+          <p>
+            Coordinate education, housing, subscription control, caregiving, shared cash flow, and long-term wealth
+            planning through one intelligent family banking experience.
+          </p>
+          <div className="hero-actions">
+            <button className="primary-button" onClick={onSignIn}>
+              Sign In <ChevronRight size={18} />
+            </button>
+            <button className="secondary-button" onClick={onCreate}>
+              Create Family Profile
+            </button>
+          </div>
+        </div>
+        <div className="hero-media">
+          <img src={heroImage} alt="Premium family banking dashboard displayed in a modern home office" />
+          <div className="hero-stat">
+            <span>Readiness</span>
+            <strong>6/8</strong>
+            <small>Areas visible</small>
+          </div>
+        </div>
+      </section>
+      <section className="feature-grid">
+        {featureCards.map(({ title, text, icon: Icon }) => (
+          <button className="feature-card" key={title} onClick={onCreate}>
+            <Icon size={24} />
+            <strong>{title}</strong>
+            <span>{text}</span>
+          </button>
+        ))}
+      </section>
+    </main>
+  );
+}
+
+function AuthPage({ initialTab, onNavigate }: { initialTab: "signin" | "create"; onNavigate: (route: Route) => void }) {
+  const [tab, setTab] = useState<"signin" | "create">(initialTab);
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    onNavigate(tab === "signin" ? "family" : "onboarding");
+  };
+
+  return (
+    <main className="auth-page">
+      <button className="back-link" onClick={() => onNavigate("landing")}>
+        <ChevronRight size={16} /> Back to FamilyOS
+      </button>
+      <section className="auth-panel">
+        <div>
+          <BrandMark />
+          <h1>{tab === "signin" ? "Welcome back, Alex" : "Create your family profile"}</h1>
+          <p>
+            FamilyOS connects individual accounts into a role-based family view without automatically granting control
+            over another person's money.
+          </p>
+        </div>
+        <div className="tabs">
+          <button className={tab === "signin" ? "active" : ""} onClick={() => setTab("signin")}>
+            Sign In
+          </button>
+          <button className={tab === "create" ? "active" : ""} onClick={() => setTab("create")}>
+            Create Account
+          </button>
+        </div>
+        <form className="auth-form" onSubmit={submit}>
+          {tab === "create" && <Field label="Full Name" value="Alex Chen" />}
+          <Field label="Email" value="alex.chen@example.ca" />
+          <Field label="Password" value="familyosdemo" type="password" />
+          {tab === "create" && (
+            <label className="field">
+              Primary role in family
+              <select defaultValue="Parent">
+                <option>Parent</option>
+                <option>Adult Child</option>
+                <option>Spouse / Partner</option>
+                <option>Caregiver</option>
+                <option>Other</option>
+              </select>
+            </label>
+          )}
+          <button className="primary-button full" type="submit">
+            {tab === "signin" ? "Sign In" : "Continue to Family Setup"}
+          </button>
+        </form>
+      </section>
+    </main>
+  );
+}
+
+function OnboardingPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  const [step, setStep] = useState(0);
+  const steps = ["Family Members", "Household Goals", "Assets & Accounts", "Permissions & Consent", "Summary"];
+
+  return (
+    <main className="onboarding">
+      <div className="onboarding-header">
+        <BrandMark />
+        <div>
+          <span>Step {step + 1} of 5</span>
+          <h1>{steps[step]}</h1>
+        </div>
+      </div>
+      <div className="onboarding-visual">
+        <img src={onboardingImage} alt="Family reviewing financial setup together around a tablet" />
+        <div>
+          <strong>Household setup, with consent at the center.</strong>
+          <span>FamilyOS uses onboarding to connect goals, accounts, roles, permissions, and missing information.</span>
+        </div>
+      </div>
+      <div className="stepper">
+        {steps.map((item, index) => (
+          <button key={item} className={index <= step ? "active" : ""} onClick={() => setStep(index)}>
+            {index + 1}
+            <span>{item}</span>
+          </button>
+        ))}
+      </div>
+      <section className="onboarding-card">
+        {step === 0 && <FamilyMembersStep />}
+        {step === 1 && <HouseholdGoalsStep />}
+        {step === 2 && <AssetsStep />}
+        {step === 3 && <PermissionsConsentStep />}
+        {step === 4 && <SummaryStep />}
+      </section>
+      <div className="onboarding-actions">
+        <button className="secondary-button" disabled={step === 0} onClick={() => setStep(Math.max(0, step - 1))}>
+          Back
+        </button>
+        {step < 4 ? (
+          <button className="primary-button" onClick={() => setStep(step + 1)}>
+            Continue
+          </button>
+        ) : (
+          <button className="primary-button" onClick={() => onNavigate("family")}>
+            Enter Family Dashboard
+          </button>
+        )}
+      </div>
+    </main>
+  );
+}
+
+function FamilyMembersStep() {
+  return (
+    <div>
+      <div className="section-heading">
+        <h2>Build the Chen Family profile</h2>
+        <p>Each member can have a different role, data view, and action level.</p>
+      </div>
+      <div className="member-table">
+        <div className="member-row header">
+          <span>Name</span>
+          <span>Relationship</span>
+          <span>Age</span>
+          <span>Role</span>
+          <span>Access level</span>
+        </div>
+        {familyMembers.map((member) => (
+          <div className="member-row" key={member.name}>
+            <strong>{member.name}</strong>
+            <span>{member.relationship}</span>
+            <span>{member.age ?? "-"}</span>
+            <span>{member.role}</span>
+            <select defaultValue={member.access}>
+              <option>No Access</option>
+              <option>View Only</option>
+              <option>Limited Actions</option>
+              <option>Caregiver Mode</option>
+              <option>Joint Account Access</option>
+            </select>
+          </div>
+        ))}
+      </div>
+      <button className="secondary-button compact">Add family member</button>
+    </div>
+  );
+}
+
+function HouseholdGoalsStep() {
+  const goals = [
+    "Buy a home / renew mortgage",
+    "Fund child education",
+    "Support university rent and living expenses",
+    "Build emergency fund",
+    "Support aging parents",
+    "Plan retirement",
+    "Organize estate documents",
+    "Manage family insurance",
+    "Transfer wealth across generations"
+  ];
+  return (
+    <div>
+      <div className="section-heading">
+        <h2>What is this household coordinating?</h2>
+        <p>FamilyOS uses goals to connect accounts, permissions, and recommendations.</p>
+      </div>
+      <div className="checkbox-grid">
+        {goals.map((goal, index) => (
+          <label key={goal} className="check-card">
+            <input type="checkbox" defaultChecked={index < 6 || goal.includes("estate")} />
+            <span>{goal}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AssetsStep() {
+  const cibc = ["CIBC Chequing", "CIBC Savings", "CIBC Mortgage", "CIBC Credit Card", "CIBC RESP", "CIBC TFSA", "CIBC RRSP"];
+  const external = [
+    ["External bank savings", "$54,000"],
+    ["External investments", "$218,000"],
+    ["Property value", "$950,000"],
+    ["Insurance coverage estimate", "$640,000"],
+    ["International / overseas assets optional", "$0"],
+    ["Debts or liabilities", "$40,000"]
+  ];
+  return (
+    <div className="asset-split">
+      <div>
+        <DataLabel type="verified" />
+        <h2>Verified CIBC Assets</h2>
+        <div className="asset-list">
+          {cibc.map((item) => (
+            <label key={item} className="asset-line">
+              <input type="checkbox" defaultChecked />
+              <span>{item}</span>
+              <CheckCircle2 size={17} />
+            </label>
+          ))}
+        </div>
+      </div>
+      <div>
+        <DataLabel type="reported" />
+        <h2>Self-Reported External Assets</h2>
+        <p className="fineprint">
+          FamilyOS can include self-reported assets from other institutions to provide a more complete family picture.
+          These values are not verified by CIBC.
+        </p>
+        <div className="asset-inputs">
+          {external.map(([label, value]) => (
+            <Field key={label} label={label} value={value} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PermissionsConsentStep() {
+  const permissions = [
+    "Share account balance",
+    "Share transactions",
+    "Allow bill payment",
+    "Allow transfer",
+    "Send unusual activity alerts",
+    "Emergency access enabled"
+  ];
+  return (
+    <div>
+      <div className="section-heading">
+        <h2>Permission-based access</h2>
+        <p>Each family member controls what they share and what actions others can take.</p>
+      </div>
+      <div className="consent-grid">
+        <div className="consent-copy">
+          <p>Alex can view household dashboard.</p>
+          <p>Jamie can view and manage shared bills.</p>
+          <p>Alex can view Grace's care budget.</p>
+          <p>Alex cannot move money from Grace's personal account unless authorized.</p>
+          <p>Grace can grant or revoke access.</p>
+        </div>
+        <div className="toggle-stack">
+          {permissions.map((item, index) => (
+            <Toggle key={item} label={item} defaultChecked={index !== 3} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SummaryStep() {
+  return (
+    <div className="summary-grid">
+      <MetricCard icon={CheckCircle2} title="Family Profile Created" value="Chen Family" caption="5 members, 8 active goals" />
+      <MetricCard
+        icon={Gauge}
+        title="Family Readiness Snapshot"
+        value="Ready to review"
+        caption="Housing and cash flow are on track. Education, caregiving, and legacy planning may benefit from review."
+      />
+      <MetricCard
+        icon={AlertTriangle}
+        title="Missing Information Notice"
+        value="3 items"
+        caption="External values are self-reported and may affect recommendation accuracy."
+      />
+      <div className="wide-card">
+        <h3>Recommended first actions</h3>
+        <ul className="task-list">
+          {tasks.slice(0, 4).map((task) => (
+            <li key={task}>
+              <CheckCircle2 size={16} />
+              {task}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function DashboardShell({
+  route,
+  onNavigate,
+  children
+}: {
+  route: Route;
+  onNavigate: (route: Route) => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <BrandMark />
+        <nav>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button key={item.route} className={route === item.route ? "active" : ""} onClick={() => onNavigate(item.route)}>
+                <Icon size={18} />
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+      <div className="app-main">
+        <header className="topbar">
+          <div>
+            <span>Welcome back, Alex</span>
+            <h1>{routeTitle(route)}</h1>
+          </div>
+          <div className="topbar-actions">
+            <button className="family-selector">
+              <UsersRound size={17} />
+              The Chen Family
+            </button>
+            <button className="icon-button" aria-label="Search">
+              <Search size={19} />
+            </button>
+            <button className="icon-button" aria-label="Notifications">
+              <Bell size={19} />
+            </button>
+            <div className="avatar">AC</div>
+          </div>
+        </header>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function renderRoute(route: Route, onNavigate: (route: Route) => void) {
+  switch (route) {
+    case "family":
+    case "overview":
+      return <FamilyDashboard onNavigate={onNavigate} />;
+    case "education":
+      return <EducationPlanner />;
+    case "housing":
+      return <HousingHub />;
+    case "cashflow":
+      return <CashFlow />;
+    case "subscriptions":
+      return <SubscriptionControl />;
+    case "caregiving":
+      return <CaregivingMode />;
+    case "protection":
+      return <Protection />;
+    case "investments":
+      return <Investments />;
+    case "legacy":
+      return <LegacyMap />;
+    case "documents":
+      return <DocumentsVault />;
+    case "permissions":
+      return <PermissionsPage />;
+    case "insights":
+      return <AIInsightsPage onNavigate={onNavigate} />;
+    case "settings":
+      return <SettingsPage />;
+    case "accounts":
+      return <AccountsPage />;
+    case "goals":
+      return <GoalsPage />;
+    default:
+      return <FamilyDashboard onNavigate={onNavigate} />;
+  }
+}
+
+function FamilyDashboard({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  return (
+    <main className="family-dashboard">
+      <section className="priority-banner">
+        <div>
+          <span>FamilyOS priorities</span>
+          <h2>Your family has 3 priorities this month</h2>
+          <p>Education planning, caregiving support, and subscription review may need attention.</p>
+          <button className="primary-button compact" onClick={() => onNavigate("insights")}>
+            Review priorities
+          </button>
+        </div>
+        <div className="priority-visual">
+          <img src={onboardingImage} alt="Family reviewing financial priorities together" />
+        </div>
+      </section>
+
+      <section className="dashboard-two-column">
+        <div className="card calm-card">
+          <div className="card-title-row">
+            <div>
+              <h2>Family Readiness Snapshot</h2>
+              <p>A simple view of what is on track and what needs attention.</p>
+            </div>
+            <button className="secondary-button compact" onClick={() => onNavigate("goals")}>
+              View goals
+            </button>
+          </div>
+          <ReadinessMatrix compact />
+          <div className="gentle-progress limited">
+            {planningProgress
+              .filter(([label]) => label === "Education planning" || label === "Caregiving support")
+              .map(([label, value]) => (
+                <ProgressBar key={label} label={String(label)} value={Number(value)} />
+              ))}
+          </div>
+        </div>
+
+        <div className="card calm-card">
+          <div className="card-title-row">
+            <h2>AI Family Insights</h2>
+            <button className="secondary-button compact" onClick={() => onNavigate("insights")}>
+              View all
+            </button>
+          </div>
+          <div className="insight-stack focused">
+            {[aiInsights[0], aiInsights.find((insight) => insight.category === "Subscriptions")!].map((insight) => (
+              <InsightMini key={insight.title} insight={insight} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="recommended-actions">
+        <div className="section-heading">
+          <h2>Top Recommended Actions</h2>
+          <p>Start with the three items most likely to affect the Chen Family this month.</p>
+        </div>
+        <div className="action-card-grid">
+          {[
+            {
+              category: "Education",
+              title: "Review Emma's university funding gap",
+              why: "Projected first-year costs may exceed the current RESP path by $7,800.",
+              cta: "Open Education Planner",
+              route: "education" as Route
+            },
+            {
+              category: "Caregiving",
+              title: "Confirm Grace's unusual transaction",
+              why: "A $640 transaction was flagged under permissioned caregiving alerts.",
+              cta: "Open Caregiving Mode",
+              route: "caregiving" as Route
+            },
+            {
+              category: "Subscriptions",
+              title: "Review free trials ending this week",
+              why: "Two free trials convert to paid plans within the next 7 days.",
+              cta: "Open Subscription Control",
+              route: "subscriptions" as Route
+            }
+          ].map((item) => (
+            <article className="priority-action-card" key={item.title}>
+              <span>{item.category}</span>
+              <h3>{item.title}</h3>
+              <p>{item.why}</p>
+              <button className="secondary-button compact" onClick={() => onNavigate(item.route)}>
+                {item.cta}
+              </button>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="module-preview-section">
+        <div className="section-heading">
+          <h2>Key Modules Preview</h2>
+          <p>High-level household indicators, with details available in each module.</p>
+        </div>
+        <div className="module-preview-grid">
+          <PreviewCard
+            title="Estimated Household Picture"
+            route="accounts"
+            onNavigate={onNavigate}
+            stats={[
+              ["Verified CIBC assets", "$412,000"],
+              ["Self-reported assets", "$836,000"],
+              ["Liabilities", "$530,000"]
+            ]}
+          />
+          <PreviewCard
+            title="Household Cash Flow"
+            route="cashflow"
+            onNavigate={onNavigate}
+            stats={[
+              ["Income", "$12,400"],
+              ["Expenses", "$8,540"],
+              ["Safe balance", "$3,860"]
+            ]}
+          />
+          <PreviewCard
+            title="Family Goals"
+            route="goals"
+            onNavigate={onNavigate}
+            stats={[
+              ["On track", "2 areas"],
+              ["Needs review", "3 areas"],
+              ["Missing info", "Legacy"]
+            ]}
+          />
+          <PreviewCard
+            title="Subscription Watch"
+            route="subscriptions"
+            onNavigate={onNavigate}
+            stats={[
+              ["Active subscriptions", "8"],
+              ["Trials ending soon", "2"],
+              ["Potential savings", "$96/month"]
+            ]}
+          />
+          <PreviewCard
+            title="Upcoming Tasks"
+            route="insights"
+            onNavigate={onNavigate}
+            stats={[
+              ["RESP review", "This week"],
+              ["Grace alert", "Needs review"],
+              ["Trial cards", "2 ending"]
+            ]}
+          />
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function EducationPlanner() {
+  return (
+    <ModulePage
+      icon={GraduationCap}
+      kicker="Education-to-Independence Planner"
+      title="Emma Chen, age 17"
+      summary="Plan RESP, tuition, rent, parent support, and student banking from Grade 12 to graduation."
+      insight="Based on Emma's projected first-year cost, consider increasing monthly RESP contributions by $180 or setting up a dedicated university living expense fund."
+      image={educationImage}
+      imageAlt="Parent and student reviewing university planning on a tablet"
+    >
+      <div className="module-grid">
+        {[
+          ["University target year", "2027"],
+          ["Estimated tuition", "$12,500/year"],
+          ["Estimated rent", "$1,150/month"],
+          ["Books & supplies", "$1,200/year"],
+          ["Food/transport/personal", "$850/month"],
+          ["Total estimated first-year cost", "$28,500"],
+          ["RESP balance", "$32,000"],
+          ["Projected gap", "$7,800"]
+        ].map(([label, value]) => (
+          <MetricTile key={label} label={label} value={value} />
+        ))}
+      </div>
+      <div className="two-column">
+        <Panel title="Planner Features">
+          {[
+            "Tuition forecast",
+            "University rent budget",
+            "Parent monthly support transfer planner",
+            "Scholarship / OSAP placeholder",
+            "Student credit-building checklist",
+            "Student chequing account recommendation"
+          ].map((item) => (
+            <CheckLine key={item}>{item}</CheckLine>
+          ))}
+        </Panel>
+        <Panel title="Transition Timeline">
+          {["Grade 12", "First year university", "First rental lease", "First credit card", "First internship", "Graduation"].map(
+            (item, index) => (
+              <TimelineItem key={item} label={item} done={index < 1} />
+            )
+          )}
+        </Panel>
+      </div>
+    </ModulePage>
+  );
+}
+
+function HousingHub() {
+  return (
+    <ModulePage
+      icon={Home}
+      kicker="Housing Hub"
+      title="Mortgage and home responsibilities"
+      summary="Coordinate ownership costs, renewal readiness, home protection, and renovation planning."
+      insight="Mortgage renewal in 14 months. Start preparing 6 months before renewal."
+    >
+      <div className="module-grid">
+        {[
+          ["Current home value", "$950,000"],
+          ["Mortgage balance", "$490,000"],
+          ["Monthly mortgage payment", "$3,240"],
+          ["Property tax", "$540/month"],
+          ["Home insurance", "$186/month"],
+          ["Utilities", "$420/month"],
+          ["Renovation fund", "42% funded"],
+          ["HELOC utilization", "31%"]
+        ].map(([label, value]) => (
+          <MetricTile key={label} label={label} value={value} />
+        ))}
+      </div>
+      <div className="two-column">
+        <Panel title="Renewal Readiness">
+          <StatusSummary
+            title="Preparation suggested"
+            text="Documentation is progressing, but rate scenarios and debt planning should be reviewed before the renewal window."
+          />
+          <ProgressBar label="Income documentation" value={84} />
+          <ProgressBar label="Rate scenario review" value={52} />
+          <ProgressBar label="Debt repayment plan" value={61} />
+        </Panel>
+        <Panel title="AI Housing Insights">
+          <InsightText text="Your HELOC utilization increased this quarter. Review repayment plan." />
+          <InsightText text="Your renovation fund is 42% funded." />
+        </Panel>
+      </div>
+    </ModulePage>
+  );
+}
+
+function CashFlow() {
+  const rows = [
+    ["Mortgage", "Alex", "$3,240", "Verified CIBC data"],
+    ["Utilities", "Jamie", "$420", "Self-reported"],
+    ["Emma tuition savings", "Alex + Jamie", "$620", "Verified RESP + goal"],
+    ["Grace care support", "Alex", "$1,200", "Permissioned care budget"],
+    ["Insurance", "Jamie", "$386", "Self-reported policy values"]
+  ];
+  return (
+    <ModulePage
+      icon={CircleDollarSign}
+      kicker="Household Cash Flow Manager"
+      title="Family-level income and expense coordination"
+      summary="See safe-to-spend, shared bills, parent support, child expenses, debt payments, and savings rate."
+      insight="Your safe-to-spend amount for the next 14 days is $1,240."
+    >
+      <div className="module-grid">
+        {[
+          ["Combined household income", "$12,400"],
+          ["Fixed expenses", "$5,640"],
+          ["Variable expenses", "$1,700"],
+          ["Child expenses", "$860"],
+          ["Parent support", "$1,200"],
+          ["Debt payments", "$740"],
+          ["Savings rate", "14%"],
+          ["Emergency coverage", "2.1 months"]
+        ].map(([label, value]) => (
+          <MetricTile key={label} label={label} value={value} />
+        ))}
+      </div>
+      <Panel title="Shared Bill Assignment">
+        <DataTable headers={["Bill", "Responsible", "Amount", "Source"]} rows={rows} />
+      </Panel>
+      <div className="insight-row">
+        <InsightText text="This month's parent support spending is $320 above average." />
+        <InsightText text="Emergency fund would cover 2.1 months of family expenses." />
+      </div>
+    </ModulePage>
+  );
+}
+
+function SubscriptionControl() {
+  const [filter, setFilter] = useState("All");
+  const [toast, setToast] = useState("");
+  const familyFilters = ["All", "Alex", "Jamie", "Emma", "Ethan", "Grace"];
+  const visibleSubscriptions = subscriptions.filter((item) => filter === "All" || item.owner === filter || item.owner === "Family");
+  const showToast = (message: string) => {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 2400);
+  };
+
+  return (
+    <ModulePage
+      icon={ReceiptText}
+      kicker="CIBC Subscription Control Center"
+      title="Subscription Control Center"
+      summary="Track, manage, and take action on recurring payments across your family."
+      insight="Meal Kit Trial converts to a paid plan in 4 days. Create a trial card or cancel before June 23 to avoid the $89.99 charge."
+      image={subscriptionImage}
+      imageAlt="Phone with subscription cards and merchant payment controls"
+    >
+      {toast && (
+        <div className="toast" role="status">
+          <CheckCircle2 size={17} />
+          {toast}
+        </div>
+      )}
+      <div className="module-grid subscription-overview">
+        <MetricTile label="Active subscriptions" value="8" />
+        <MetricTile label="Estimated monthly cost" value="$412" />
+        <MetricTile label="Potential savings identified" value="$96/month" />
+        <MetricTile label="Free trials ending soon" value="2" />
+        <MetricTile label="Duplicate subscriptions detected" value="1" />
+      </div>
+      <div className="family-filter">
+        {familyFilters.map((item) => (
+          <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>
+            {item}
+          </button>
+        ))}
+      </div>
+      <Panel title="Recurring Subscription List">
+        <p className="fineprint">
+          Subscription visibility depends on card ownership and family sharing permissions. FamilyOS does not expose
+          personal transactions unless the account owner has granted access.
+        </p>
+        <div className="subscription-list">
+          {visibleSubscriptions.map((item) => (
+            <article className="subscription-row" key={item.merchant}>
+              <div>
+                <strong>{item.merchant}</strong>
+                <span>{item.amount}</span>
+              </div>
+              <div>
+                <small>Payment method</small>
+                <span>{item.method}</span>
+              </div>
+              <div>
+                <small>Owner</small>
+                <span>{item.owner}</span>
+              </div>
+              <div>
+                <small>Status</small>
+                <StatusChip status={item.status.includes("Trial") || item.status.includes("Price") ? "Action Recommended" : "On Track"} />
+              </div>
+              <div>
+                <small>Next billing</small>
+                <span>{item.nextBilling}</span>
+              </div>
+              <div>
+                <small>Suggested action</small>
+                <span>{item.action}</span>
+              </div>
+              <div className="subscription-actions">
+                {["Guided Cancellation", "Switch Payment Card", "Set Monthly Cap", "Pause Payment", "Keep Subscription"].map((action) => (
+                  <button key={action} onClick={() => showToast(`${action} prepared for ${item.merchant}.`)}>
+                    {action}
+                  </button>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      </Panel>
+      <div className="two-column">
+        <Panel title="Alerts & Insights">
+          <InsightText text="Meal Kit Trial becomes paid in 4 days. Cancel before June 23 to avoid $89.99 charge." />
+          <InsightText text="Two video streaming services have overlapping usage. Review Disney+ and Netflix." />
+          <InsightText text="Adobe Creative Cloud has not been used recently but costs $29.99/month." />
+          <InsightText text="GoodLife Fitness payment increased by $8 this month." />
+        </Panel>
+        <Panel title="Merchant Payment Controls">
+          <div className="merchant-control-card">
+            <CreditCard size={26} />
+            <div>
+              <strong>Create a trial card that expires after 14 days or caps spending at $1.</strong>
+              <span>Use merchant-specific card controls to reduce unwanted recurring charges.</span>
+            </div>
+          </div>
+          {[
+            "Create virtual card token for free trials",
+            "Set expiry date for trial card",
+            "Set merchant-specific monthly spending cap",
+            "Freeze merchant payments",
+            "Switch subscription to another CIBC card"
+          ].map((item) => (
+            <button className="action-line" key={item} onClick={() => showToast(`${item} flow opened.`)}>
+              {item}
+              <ChevronRight size={16} />
+            </button>
+          ))}
+        </Panel>
+      </div>
+      <div className="family-use-case">
+        <UsersRound size={20} />
+        <span>FamilyOS helps households identify subscriptions that are spread across different family members, cards, and merchants.</span>
+      </div>
+    </ModulePage>
+  );
+}
+
+function CaregivingMode() {
+  return (
+    <ModulePage
+      icon={HeartPulse}
+      kicker="Caregiving Mode"
+      title="Grace Chen care finances"
+      summary="Permission-based support for approved care bills, alerts, invoices, and shared visibility."
+      insight="Grace's account had an unusual $640 transaction. Please review."
+      image={caregivingImage}
+      imageAlt="Adult child and elder parent reviewing care budget and calendar together"
+    >
+      <div className="module-grid">
+        {[
+          ["Monthly care budget", "$1,200 / $1,500 used"],
+          ["Upcoming appointment", "June 24, 10:30 AM"],
+          ["Care-related expenses", "$780"],
+          ["Medication spending", "$214"],
+          ["Home support spending", "$520"],
+          ["Authorized family members", "2"],
+          ["Emergency contact", "Alex Chen"],
+          ["Unusual activity alert", "$640 flagged"]
+        ].map(([label, value]) => (
+          <MetricTile key={label} label={label} value={value} />
+        ))}
+      </div>
+      <div className="two-column">
+        <Panel title="Approved Actions">
+          {[
+            "View approved account summary",
+            "Pay approved care-related bill",
+            "Upload care invoice",
+            "Share access with family member",
+            "Set spending alert",
+            "Review unusual transaction"
+          ].map((item) => (
+            <button className="action-line" key={item}>
+              {item}
+              <ChevronRight size={16} />
+            </button>
+          ))}
+        </Panel>
+        <Panel title="Permissions">
+          <DataTable
+            headers={["Member", "Access"]}
+            rows={[
+              ["Alex", "View balance + pay approved bills"],
+              ["Jamie", "View care budget only"],
+              ["Emma", "No access"],
+              ["Grace", "Owner, can revoke permissions"]
+            ]}
+          />
+          <p className="fineprint">FamilyOS does not imply unlimited control. Grace owns and can revoke access.</p>
+        </Panel>
+      </div>
+    </ModulePage>
+  );
+}
+
+function Protection() {
+  return (
+    <ModulePage
+      icon={ShieldCheck}
+      kicker="Insurance & Protection"
+      title="Household protection picture"
+      summary="Understand whether the family is financially protected across life, disability, property, travel, and illness."
+      insight="Life insurance coverage may be insufficient based on mortgage balance and dependents."
+    >
+      <div className="module-grid">
+        {["Life insurance", "Disability insurance", "Home insurance", "Auto insurance", "Travel insurance", "Critical illness coverage"].map(
+          (item, index) => (
+            <MetricTile key={item} label={item} value={index < 3 ? "Active" : "Review"} />
+          )
+        )}
+        <MetricTile label="Coverage gap indicator" value="Moderate" />
+        <MetricTile label="Beneficiary review" value="Due now" />
+      </div>
+      <Panel title="Protection Snapshot">
+        <StatusSummary
+          title="Coverage review suggested"
+          text="Life insurance and beneficiary details may need a refresh based on mortgage balance and dependents."
+        />
+        <InsightText text="Beneficiary information has not been reviewed in 2 years." />
+      </Panel>
+    </ModulePage>
+  );
+}
+
+function Investments() {
+  const [scenario, setScenario] = useState<GicScenario>({
+    amount: 25000,
+    accountType: "TFSA",
+    gicType: "Non-cashable",
+    term: "2 years",
+    payout: "Paid at maturity",
+    goal: "Emma's education"
+  });
+  const projection = calculateGicProjection(scenario);
+  const comparisonScenarios = [
+    { label: "Starting amount", value: scenario.amount, type: "base" },
+    {
+      label: "Cashable",
+      value: calculateGicProjection({ ...scenario, gicType: "Cashable" }).maturityValue,
+      type: "cashable"
+    },
+    {
+      label: "Non-cashable",
+      value: calculateGicProjection({ ...scenario, gicType: "Non-cashable" }).maturityValue,
+      type: "noncashable"
+    },
+    {
+      label: "Escalating",
+      value: calculateGicProjection({ ...scenario, gicType: "Escalating rate" }).maturityValue,
+      type: "escalating"
+    }
+  ];
+  const maxComparison = Math.max(...comparisonScenarios.map((item) => item.value));
+  const rows = [
+    ["Alex TFSA", "Alex", "Home upgrade goal", "$42,000", "Private, goal-linked only"],
+    ["Jamie RRSP", "Jamie", "Retirement goal", "$126,000", "Summary shared"],
+    ["Emma RESP", "Alex + Jamie", "Education goal", "$32,000", "Shared with parents"],
+    ["Non-registered", "Alex", "Family emergency reserve", "$58,000", "Shared reserve"]
+  ];
+  return (
+    <ModulePage
+      icon={PiggyBank}
+      kicker="Investments & GIC Planner"
+      title="Investments & GIC Planner"
+      summary="Compare investment options, projected returns, and liquidity trade-offs for your family goals."
+      insight="Based on Emma's university timeline, a 1-2 year non-cashable GIC may fit better than a 5-year locked option."
+    >
+      <div className="advisor-disclaimer">
+        <AlertTriangle size={17} />
+        <span>These rates are illustrative for prototype purposes only.</span>
+      </div>
+
+      <section className="gic-planner-grid">
+        <Panel title="GIC Scenario Builder">
+          <div className="scenario-form">
+            <label className="field">
+              Investment amount
+              <input
+                type="number"
+                min="1000"
+                step="500"
+                value={scenario.amount}
+                onChange={(event) => setScenario({ ...scenario, amount: Number(event.target.value) || 0 })}
+              />
+            </label>
+            <ScenarioSelect
+              label="Account type"
+              value={scenario.accountType}
+              options={["Non-registered", "TFSA", "RRSP", "RESP"]}
+              onChange={(value) => setScenario({ ...scenario, accountType: value })}
+            />
+            <ScenarioSelect
+              label="GIC type"
+              value={scenario.gicType}
+              options={["Cashable", "Non-cashable", "Escalating rate"]}
+              onChange={(value) => setScenario({ ...scenario, gicType: value as GicType })}
+            />
+            <ScenarioSelect
+              label="Term length"
+              value={scenario.term}
+              options={["90 days", "180 days", "1 year", "2 years", "3 years", "5 years"]}
+              onChange={(value) => setScenario({ ...scenario, term: value })}
+            />
+            <ScenarioSelect
+              label="Interest payout"
+              value={scenario.payout}
+              options={["Paid at maturity", "Annual", "Monthly"]}
+              onChange={(value) => setScenario({ ...scenario, payout: value })}
+            />
+            <ScenarioSelect
+              label="Goal linked to"
+              value={scenario.goal}
+              options={["Emergency reserve", "Emma's education", "Home upgrade", "Retirement", "Caregiving reserve"]}
+              onChange={(value) => setScenario({ ...scenario, goal: value })}
+            />
+          </div>
+        </Panel>
+
+        <Panel title="Projected Return Results">
+          <div className="results-card">
+            <MoneyStat label="Principal amount" value={scenario.amount} />
+            <MoneyStat label="Estimated interest earned" value={projection.interest} />
+            <MoneyStat label="Estimated maturity value" value={projection.maturityValue} />
+          </div>
+          <div className="result-facts">
+            <span>Effective annual return <strong>{projection.effectiveReturn.toFixed(2)}%</strong></span>
+            <span>Liquidity level <strong>{liquidityForScenario(scenario)}</strong></span>
+            <span>Risk level <strong>Low principal risk, liquidity trade-off applies</strong></span>
+            <span>Goal fit <strong>{goalFitForScenario(scenario)}</strong></span>
+            <span>Tax note <strong>{taxNoteForAccount(scenario.accountType)}</strong></span>
+          </div>
+        </Panel>
+      </section>
+
+      <Panel title="Recommended Options for the Chen Family">
+        <div className="gic-recommendation-grid">
+          {recommendedGicOptions.map((option) => {
+            const result = calculateGicProjection(option);
+            return (
+              <article className="gic-option-card" key={option.title}>
+                <span>{option.title}</span>
+                <h3>{option.gicType} {option.term} GIC</h3>
+                <div className="option-facts">
+                  <small>Suggested amount <strong>{formatCurrency(option.suggestedAmount)}</strong></small>
+                  <small>Estimated return <strong>{formatCurrency(result.interest)}</strong></small>
+                  <small>Maturity value <strong>{formatCurrency(result.maturityValue)}</strong></small>
+                  <small>Liquidity <strong>{liquidityForScenario(option)}</strong></small>
+                </div>
+                <p>{option.why}</p>
+                <button
+                  className="secondary-button compact"
+                  onClick={() =>
+                    setScenario({
+                      amount: option.suggestedAmount,
+                      accountType: option.accountType,
+                      gicType: option.gicType,
+                      term: option.term,
+                      payout: option.payout,
+                      goal: option.goal
+                    })
+                  }
+                >
+                  View Scenario
+                </button>
+              </article>
+            );
+          })}
+        </div>
+      </Panel>
+
+      <div className="two-column investment-analysis-grid">
+        <Panel title="Projected Value Comparison">
+          <p className="fineprint">Compare how different GIC structures may grow over the selected period.</p>
+          <div className="comparison-chart">
+            {comparisonScenarios.map((item) => (
+              <div className={`comparison-bar ${item.type}`} key={item.label}>
+                <span>{item.label}</span>
+                <i style={{ height: `${Math.max(18, (item.value / maxComparison) * 100)}%` }} />
+                <strong>{formatCurrency(item.value)}</strong>
+              </div>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel title="Goal Fit Analysis">
+          <div className="goal-fit-matrix">
+            <div className="goal-fit-row header">
+              <span>Family goal</span>
+              <span>Cashable GIC</span>
+              <span>Non-cashable GIC</span>
+              <span>Escalating GIC</span>
+            </div>
+            {[
+              ["Emergency reserve", "Strong fit", "Use caution", "Use caution"],
+              ["Emma's education", "Good fit", "Strong fit", "Use caution"],
+              ["Home upgrade", "Good fit", "Good fit", "Good fit"],
+              ["Retirement", "Good fit", "Good fit", "Strong fit"],
+              ["Caregiving reserve", "Strong fit", "Use caution", "Not recommended"]
+            ].map((row) => (
+              <div className="goal-fit-row" key={row[0]}>
+                <strong>{row[0]}</strong>
+                {row.slice(1).map((status) => (
+                  <StatusChip key={status} status={status} />
+                ))}
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </div>
+
+      <Panel title="AI Investment Insights">
+        <div className="investment-insight-grid">
+          {[
+            {
+              text: "Based on Emma's university timeline, a 1-2 year non-cashable GIC may fit better than a 5-year locked option.",
+              source: "Verified CIBC RESP + self-reported education timeline",
+              confidence: "Medium",
+              action: "Compare Education GIC Options"
+            },
+            {
+              text: "Emergency reserve funds should remain flexible. Consider a cashable GIC or high-interest savings structure.",
+              source: "Verified savings balance + household expense assumptions",
+              confidence: "High",
+              action: "Compare Liquidity Options"
+            },
+            {
+              text: "Your TFSA contribution room may allow tax-efficient growth, but contribution limits should be confirmed.",
+              source: "Verified CIBC TFSA summary + missing external contribution history",
+              confidence: "Medium",
+              action: "Review TFSA Scenario"
+            },
+            {
+              text: "Some self-reported external assets are not verified, so recommendations involving total household liquidity should be reviewed.",
+              source: "Self-reported external assets + verified CIBC balances",
+              confidence: "Medium",
+              action: "Book Advisor Review"
+            }
+          ].map((item) => (
+            <article className="advisor-insight-card" key={item.text}>
+              <Sparkles size={17} />
+              <p>{item.text}</p>
+              <div>
+                <span>Data source: {item.source}</span>
+                <span>Confidence: {item.confidence}</span>
+                <span>Recommended action: {item.action}</span>
+              </div>
+              <button className="secondary-button compact">Compare options</button>
+            </article>
+          ))}
+        </div>
+      </Panel>
+
+      <div className="module-grid investment-account-summary">
+        {[
+          ["TFSA", "$42,000"],
+          ["RRSP", "$126,000"],
+          ["RESP", "$32,000"],
+          ["Non-registered investments", "$58,000"],
+          ["Risk profile", "Balanced growth"],
+          ["Asset allocation", "63% equity / 37% income"],
+          ["Contribution room", "$18,400"],
+          ["Goal alignment", "74%"]
+        ].map(([label, value]) => (
+          <MetricTile key={label} label={label} value={value} />
+        ))}
+      </div>
+      <Panel title="Current Family Investment Accounts">
+        <DataTable headers={["Account", "Owner", "Family goal", "Balance", "Sharing status / permission"]} rows={rows} />
+      </Panel>
+      <div className="advisor-disclaimer">
+        <AlertTriangle size={17} />
+        <span>
+          Projected returns are estimates based on illustrative prototype rates. Actual rates, eligibility, tax treatment, and
+          product suitability should be confirmed with a CIBC advisor.
+        </span>
+      </div>
+    </ModulePage>
+  );
+}
+
+function LegacyMap() {
+  return (
+    <ModulePage
+      icon={ScrollText}
+      kicker="Wealth & Legacy Map"
+      title="Coordinate documents, beneficiaries, and wealth transfer"
+      summary="A family asset map that makes legacy readiness visible without replacing advisor review."
+      insight="Power of Attorney document missing for Grace."
+      image={legacyImage}
+      imageAlt="Secure folder and family legacy documents arranged on a table"
+    >
+      <div className="module-grid">
+        {[
+          ["Family asset map", "74% complete"],
+          ["Beneficiary checklist", "Needs review"],
+          ["Estate document checklist", "6 of 9 uploaded"],
+          ["Will status", "Alex uploaded"],
+          ["Power of Attorney status", "Grace missing"],
+          ["Insurance policy list", "4 active"],
+          ["Important contacts", "Advisor + lawyer"],
+          ["Wealth transfer readiness", "Needs Review"]
+        ].map(([label, value]) => (
+          <MetricTile key={label} label={label} value={value} />
+        ))}
+      </div>
+      <Panel title="Document Categories">
+        <div className="tag-cloud">
+          {["Will", "Power of Attorney", "Insurance policies", "Property documents", "Tax documents", "Care plan", "Funeral preferences optional"].map(
+            (item) => (
+              <span key={item}>{item}</span>
+            )
+          )}
+        </div>
+      </Panel>
+      <div className="insight-row">
+        <InsightText text="Beneficiary review recommended." />
+        <InsightText text="Estate documents have not been updated in 3 years." />
+      </div>
+    </ModulePage>
+  );
+}
+
+function DocumentsVault() {
+  const docs = [
+    ["Wills", "2 files", "Verified owner uploaded"],
+    ["POA", "1 missing", "Grace missing"],
+    ["Insurance", "4 files", "Self-reported"],
+    ["Property documents", "3 files", "Verified + uploaded"],
+    ["University documents", "2 files", "Emma planning"],
+    ["Lease agreements", "0 files", "Pending"],
+    ["Care invoices", "7 files", "Caregiving Mode"],
+    ["Tax documents", "5 files", "Private folder"]
+  ];
+  return (
+    <ModulePage
+      icon={FileText}
+      kicker="Documents Vault"
+      title="Secure family document list"
+      summary="Organize important files by owner, goal, and permission level."
+      insight="Upload Grace's POA to complete the caregiving readiness checklist."
+    >
+      <button className="primary-button compact">
+        <Upload size={17} /> Mock upload document
+      </button>
+      <Panel title="Vault">
+        <DataTable headers={["Category", "Status", "Access note"]} rows={docs} />
+      </Panel>
+    </ModulePage>
+  );
+}
+
+function PermissionsPage() {
+  const columns = ["View balances", "View transactions", "Pay bills", "Transfer funds", "Manage documents", "Receive alerts", "Emergency access"];
+  return (
+    <ModulePage
+      icon={LockKeyhole}
+      kicker="Permissions"
+      title="Consent-based, role-based access"
+      summary="FamilyOS does not automatically grant control over another person's account. Access is consent-based, role-based, and revocable."
+      insight="Grace can grant or revoke access to care budget visibility at any time."
+    >
+      <div className="permission-actions">
+        <button className="secondary-button">Request Access</button>
+        <button className="primary-button compact">Grant Access</button>
+        <button className="danger-button">Revoke Access</button>
+      </div>
+      <div className="permission-matrix">
+        <div className="matrix-row header">
+          <span>Family member</span>
+          {columns.map((column) => (
+            <span key={column}>{column}</span>
+          ))}
+        </div>
+        {familyMembers.map((member, rowIndex) => (
+          <div className="matrix-row" key={member.name}>
+            <strong>
+              {member.name}
+              <small>{member.access}</small>
+            </strong>
+            {columns.map((column, columnIndex) => (
+              <Toggle key={column} label="" defaultChecked={(rowIndex + columnIndex) % 3 !== 0 && member.access !== "No Access"} />
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="access-type-row">
+        {["View Only", "Limited Actions", "Caregiver Mode", "Joint Account", "Emergency Access"].map((item) => (
+          <span key={item}>{item}</span>
+        ))}
+      </div>
+    </ModulePage>
+  );
+}
+
+function AIInsightsPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  return (
+    <ModulePage
+      icon={Sparkles}
+      kicker="AI Insights"
+      title="Transparent family recommendations"
+      summary="AI can explain risks and next actions, but major financial, legal, tax, and investment decisions should be reviewed with a CIBC advisor."
+      insight="Recommendations distinguish verified CIBC data, self-reported inputs, and missing information."
+    >
+      <div className="insight-page-grid">
+        {aiInsights.map((insight) => (
+          <article className="insight-card" key={insight.title}>
+            <span className="category">{insight.category}</span>
+            <h3>{insight.title}</h3>
+            <p>{insight.body}</p>
+            <div className="source-row">
+              <span>Recommended action: {insight.action}</span>
+              <span>Confidence: {insight.confidence}</span>
+              <span>Data source: {insight.source}</span>
+            </div>
+            <button className="secondary-button compact" onClick={() => routeFromAction(insight.category, onNavigate)}>
+              {insight.action}
+            </button>
+          </article>
+        ))}
+      </div>
+    </ModulePage>
+  );
+}
+
+function SettingsPage() {
+  return (
+    <ModulePage
+      icon={Settings}
+      kicker="Settings / Privacy"
+      title="Data, consent, AI, and notifications"
+      summary="Control what FamilyOS can use and how recommendations appear."
+      insight="FamilyOS recommendations are informational and should be reviewed with a CIBC advisor for major financial decisions."
+    >
+      <div className="settings-grid">
+        {[
+          ["Data sources", "Verified CIBC accounts, uploaded documents, self-reported external values"],
+          ["Connected CIBC accounts", "Chequing, savings, mortgage, card, RESP, TFSA, RRSP"],
+          ["Self-reported external assets", "External savings, investments, property, insurance, liabilities"],
+          ["Consent management", "Role-based sharing and revocable access"],
+          ["AI recommendation settings", "Show data source, confidence, and missing information"],
+          ["Notification preferences", "Tasks, unusual activity, renewals, education timeline, care alerts"],
+          ["Privacy disclaimer", "Recommendations are informational and require advisor review for major decisions"]
+        ].map(([title, text]) => (
+          <Panel key={title} title={title}>
+            <p>{text}</p>
+          </Panel>
+        ))}
+      </div>
+    </ModulePage>
+  );
+}
+
+function AccountsPage() {
+  return (
+    <ModulePage
+      icon={WalletCards}
+      kicker="Accounts"
+      title="Verified and self-reported household accounts"
+      summary="Combine a CIBC-verified view with optional external values so the family picture is more complete."
+      insight="Self-reported values are useful for planning but should be refreshed before major decisions."
+    >
+      <div className="module-grid">
+        <MetricTile label="CIBC Chequing" value="$18,400" />
+        <MetricTile label="CIBC Savings" value="$22,000" />
+        <MetricTile label="CIBC Credit Card" value="$2,140 due" />
+        <MetricTile label="CIBC Mortgage" value="$490,000" />
+        <MetricTile label="CIBC RESP" value="$32,000" />
+        <MetricTile label="CIBC TFSA" value="$42,000" />
+        <MetricTile label="External investments" value="$218,000" />
+        <MetricTile label="Property estimate" value="$950,000" />
+      </div>
+    </ModulePage>
+  );
+}
+
+function GoalsPage() {
+  return (
+    <ModulePage
+      icon={Gauge}
+      kicker="Goals"
+      title="Household goals across generations"
+      summary="Track goals that cross account owners: education, housing, care, protection, retirement, and legacy."
+      insight="Education and retirement are currently the most underfunded goals."
+    >
+      <div className="goal-grid">
+        {[
+          ["Emma university transition", 73],
+          ["Mortgage renewal readiness", 68],
+          ["Emergency fund target", 52],
+          ["Grace care reserve", 61],
+          ["Retirement confidence", 58],
+          ["Estate readiness", 66]
+        ].map(([label, value]) => (
+          <div className="goal-card" key={label}>
+            <h3>{label}</h3>
+            <ProgressBar label="Progress" value={Number(value)} />
+          </div>
+        ))}
+      </div>
+    </ModulePage>
+  );
+}
+
+function ReadinessMatrix({ compact = false }: { compact?: boolean }) {
+  const items = compact ? readinessStatuses.filter(([label]) => !["Retirement", "Legacy"].includes(label)) : readinessStatuses;
+  return (
+    <div className={`readiness-matrix ${compact ? "compact" : ""}`}>
+      {items.map(([label, status]) => (
+        <div className="readiness-cell" key={label}>
+          <span>{label}</span>
+          <StatusChip status={String(status)} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PreviewCard({
+  title,
+  stats,
+  route,
+  onNavigate
+}: {
+  title: string;
+  stats: string[][];
+  route: Route;
+  onNavigate: (route: Route) => void;
+}) {
+  return (
+    <article className="preview-card">
+      <div className="card-title-row">
+        <h3>{title}</h3>
+        <button className="secondary-button compact" onClick={() => onNavigate(route)}>
+          Open
+        </button>
+      </div>
+      <div className="preview-stat-list">
+        {stats.map(([label, value]) => (
+          <span key={label}>
+            {label}
+            <strong>{value}</strong>
+          </span>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function ScenarioSelect({
+  label,
+  value,
+  options,
+  onChange
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="field">
+      {label}
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        {options.map((option) => (
+          <option key={option}>{option}</option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function StatusChip({ status }: { status: string }) {
+  const normalized = status.toLowerCase().replace(/\s+/g, "-");
+  return <small className={`status-chip ${normalized}`}>{status}</small>;
+}
+
+function StatusSummary({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="status-summary">
+      <SlidersHorizontal size={20} />
+      <div>
+        <strong>{title}</strong>
+        <span>{text}</span>
+      </div>
+    </div>
+  );
+}
+
+function ModulePage({
+  icon: Icon,
+  kicker,
+  title,
+  summary,
+  insight,
+  image,
+  imageAlt,
+  children
+}: {
+  icon: LucideIcon;
+  kicker: string;
+  title: string;
+  summary: string;
+  insight: string;
+  image?: string;
+  imageAlt?: string;
+  children: ReactNode;
+}) {
+  return (
+    <main className="module-page">
+      <section className={`module-hero ${image ? "with-image" : ""}`}>
+        <div className="module-hero-copy">
+          <div className="module-icon">
+            <Icon size={28} />
+          </div>
+          <div>
+            <span>{kicker}</span>
+            <h2>{title}</h2>
+            <p>{summary}</p>
+          </div>
+        </div>
+        {image && <img className="module-art" src={image} alt={imageAlt ?? ""} />}
+      </section>
+      <div className="ai-callout">
+        <Sparkles size={18} />
+        <strong>AI recommendation</strong>
+        <span>{insight}</span>
+      </div>
+      {children}
+    </main>
+  );
+}
+
+function BrandMark() {
+  return (
+    <div className="brand">
+      <div className="brand-icon">
+        <Landmark size={19} />
+      </div>
+      <div>
+        <strong>CIBC FamilyOS</strong>
+        <span>Household financial command center</span>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, value, type = "text" }: { label: string; value: string; type?: string }) {
+  return (
+    <label className="field">
+      {label}
+      <input defaultValue={value} type={type} />
+    </label>
+  );
+}
+
+function Toggle({ label, defaultChecked }: { label: string; defaultChecked?: boolean }) {
+  return (
+    <label className={label ? "toggle-line" : "toggle-only"}>
+      {label && <span>{label}</span>}
+      <input type="checkbox" defaultChecked={defaultChecked} />
+      <i />
+    </label>
+  );
+}
+
+function DataLabel({ type }: { type: "verified" | "reported" }) {
+  return <span className={`data-label ${type}`}>{type === "verified" ? "Verified by CIBC" : "Self-Reported"}</span>;
+}
+
+function MetricCard({ icon: Icon, title, value, caption }: { icon: LucideIcon; title: string; value: string; caption: string }) {
+  return (
+    <article className="metric-card">
+      <Icon size={22} />
+      <span>{title}</span>
+      <strong>{value}</strong>
+      <p>{caption}</p>
+    </article>
+  );
+}
+
+function MetricTile({ label, value }: { label: string; value: string }) {
+  return (
+    <article className="metric-tile">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </article>
+  );
+}
+
+function MoneyStat({ label, value, badge, tone }: { label: string; value: number; badge?: string; tone?: "danger" }) {
+  return (
+    <div className="money-stat">
+      <span>{label}</span>
+      <strong className={tone}>{formatCurrency(value)}</strong>
+      {badge && <small>{badge}</small>}
+    </div>
+  );
+}
+
+function ProgressBar({ label, value }: { label: string; value: number }) {
+  const status = value >= 75 ? "On track" : value >= 60 ? "Needs review" : "Action suggested";
+  return (
+    <div className="progress-line">
+      <div>
+        <span>{label}</span>
+        <small>{status}</small>
+      </div>
+      <i>
+        <b style={{ width: `${value}%` }} />
+      </i>
+    </div>
+  );
+}
+
+function MiniChart() {
+  return (
+    <div className="mini-chart" aria-label="Net worth trend chart">
+      {[42, 48, 54, 59, 64, 71, 78].map((height, index) => (
+        <span key={index} style={{ height: `${height}%` }} />
+      ))}
+    </div>
+  );
+}
+
+function CashFlowBars() {
+  return (
+    <div className="cash-bars">
+      {[
+        ["Income", 100],
+        ["Expenses", 69],
+        ["Savings", 14],
+        ["Support", 10],
+        ["Safe", 31]
+      ].map(([label, value]) => (
+        <div key={label}>
+          <span>{label}</span>
+          <i>
+            <b style={{ width: `${value}%` }} />
+          </i>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InsightMini({ insight }: { insight: (typeof aiInsights)[number] }) {
+  return (
+    <article className="insight-mini">
+      <span>{insight.category}</span>
+      <p>{insight.body}</p>
+    </article>
+  );
+}
+
+function InsightText({ text }: { text: string }) {
+  return (
+    <div className="insight-text">
+      <Sparkles size={16} />
+      <span>{text}</span>
+    </div>
+  );
+}
+
+function Panel({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="panel">
+      <h3>{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function CheckLine({ children }: { children: ReactNode }) {
+  return (
+    <div className="check-line">
+      <CheckCircle2 size={17} />
+      <span>{children}</span>
+    </div>
+  );
+}
+
+function TimelineItem({ label, done }: { label: string; done?: boolean }) {
+  return (
+    <div className={`timeline-item ${done ? "done" : ""}`}>
+      <i />
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function DataTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  return (
+    <div className="data-table">
+      <div className="table-row header" style={{ gridTemplateColumns: `repeat(${headers.length}, minmax(0, 1fr))` }}>
+        {headers.map((header) => (
+          <span key={header}>{header}</span>
+        ))}
+      </div>
+      {rows.map((row, index) => (
+        <div className="table-row" key={index} style={{ gridTemplateColumns: `repeat(${headers.length}, minmax(0, 1fr))` }}>
+          {row.map((cell) => (
+            <span key={cell}>{cell}</span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function routeTitle(route: Route) {
+  if (route === "overview") return "Family Dashboard";
+  return navItems.find((item) => item.route === route)?.label ?? "Family Dashboard";
+}
+
+function routeFromAction(category: string, onNavigate: (route: Route) => void) {
+  const routes: Record<string, Route> = {
+    Education: "education",
+    Housing: "housing",
+    Caregiving: "caregiving",
+    "Cash Flow": "cashflow",
+    Subscriptions: "subscriptions",
+    Investments: "investments",
+    Protection: "protection",
+    "Wealth & Legacy": "legacy"
+  };
+  onNavigate(routes[category] ?? "family");
+}
