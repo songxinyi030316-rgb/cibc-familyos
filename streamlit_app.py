@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 
 st.set_page_config(
@@ -27,4 +28,4 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.iframe(bundle_path, height=1200)
+components.html(bundle_path.read_text(encoding="utf-8"), height=1200, scrolling=True)
