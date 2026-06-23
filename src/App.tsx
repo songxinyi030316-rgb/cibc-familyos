@@ -148,6 +148,48 @@ const planningProgress = [
   ["Legacy readiness", 48]
 ];
 
+const externalAssetRanges = [
+  {
+    label: "External savings",
+    current: "$50K-$100K",
+    options: ["Prefer not to say", "Under $25K", "$25K-$50K", "$50K-$100K", "$100K-$250K", "$250K+"]
+  },
+  {
+    label: "External investments",
+    current: "Prefer not to say",
+    options: ["Prefer not to say", "Under $50K", "$50K-$100K", "$100K-$250K", "$250K-$500K", "$500K+"]
+  },
+  {
+    label: "Property value",
+    current: "$750K-$1M",
+    options: ["Prefer not to say", "Under $500K", "$500K-$750K", "$750K-$1M", "$1M-$1.5M", "$1.5M+"]
+  },
+  {
+    label: "Insurance coverage estimate",
+    current: "Prefer not to say",
+    options: ["Prefer not to say", "None / Not sure", "Under $100K", "$100K-$250K", "$250K-$500K", "$500K-$1M", "$1M+"]
+  },
+  {
+    label: "International / overseas assets",
+    current: "None",
+    options: ["Prefer not to say", "None", "Under $50K", "$50K-$250K", "$250K-$500K", "$500K+"]
+  },
+  {
+    label: "External debts or liabilities",
+    current: "$25K-$100K",
+    options: ["Prefer not to say", "None", "Under $25K", "$25K-$100K", "$100K-$250K", "$250K-$500K", "$500K+"]
+  }
+];
+
+const selfReportedContext = [
+  ["External savings range", "$50K-$100K"],
+  ["External investments range", "Prefer not to say"],
+  ["Property value range", "$750K-$1M"],
+  ["Insurance coverage range", "Prefer not to say"],
+  ["Overseas assets range", "None"],
+  ["External debt range", "$25K-$100K"]
+];
+
 const subscriptions = [
   {
     merchant: "Netflix Family Plan",
@@ -229,7 +271,7 @@ const aiInsights = [
     title: "Emma's university living costs may exceed current savings plan",
     body: "Projected first-year cost is $28,500. Current RESP path may fall short by $7,800.",
     confidence: "High",
-    source: "Verified CIBC RESP balance + self-reported university target",
+    source: "Verified CIBC data",
     action: "Adjust Education Plan"
   },
   {
@@ -268,8 +310,8 @@ const aiInsights = [
     category: "Cash Flow",
     title: "Emergency fund is below family target",
     body: "Current emergency fund covers 2.1 months of expenses. Recommended target is 4-6 months.",
-    confidence: "High",
-    source: "Verified balances + self-reported family expenses",
+    confidence: "Medium",
+    source: "Verified CIBC data + self-reported ranges",
     action: "Build Reserve"
   },
   {
@@ -277,15 +319,15 @@ const aiInsights = [
     title: "A 2-year non-cashable GIC may align with Emma's education timeline",
     body: "A shorter locked option could support planned education funding without committing funds beyond the expected university start window.",
     confidence: "Medium",
-    source: "Verified CIBC RESP + self-reported education timeline",
+    source: "Verified CIBC data + self-reported ranges",
     action: "Compare Education GIC Options"
   },
   {
     category: "Investments",
     title: "Emergency reserve funds may need a flexible option",
     body: "Funds intended for emergencies or caregiving should avoid long lock-in periods unless enough liquid cash remains available.",
-    confidence: "High",
-    source: "Verified savings balance + self-reported household expenses",
+    confidence: "Medium",
+    source: "Verified CIBC data + self-reported ranges",
     action: "Compare Liquidity Options"
   },
   {
@@ -293,8 +335,16 @@ const aiInsights = [
     title: "TFSA contribution room may support tax-efficient growth",
     body: "TFSA contribution room may allow more efficient growth if limits and eligibility are confirmed.",
     confidence: "Medium",
-    source: "Verified CIBC TFSA summary + missing external contribution history",
+    source: "Verified CIBC data only + missing external context",
     action: "Review TFSA Scenario"
+  },
+  {
+    category: "Planning",
+    title: "Approximate external ranges could improve planning context",
+    body: "Adding approximate external investment and insurance ranges could improve education, retirement, and legacy planning recommendations.",
+    confidence: "Medium / Missing external context",
+    source: "Verified CIBC data only",
+    action: "Update Data Sources"
   },
   {
     category: "Subscriptions",
@@ -309,7 +359,7 @@ const aiInsights = [
     title: "Life insurance may be below household need",
     body: "Coverage may not fully reflect mortgage balance, dependents, and Grace's care reserve needs.",
     confidence: "Medium",
-    source: "Self-reported policy values + verified liabilities",
+    source: "Verified CIBC data + self-reported ranges",
     action: "Book Advisor Review"
   },
   {
@@ -317,7 +367,7 @@ const aiInsights = [
     title: "Estate documents need a refresh",
     body: "Beneficiaries have not been reviewed in 2 years and Grace's POA document is missing.",
     confidence: "Medium",
-    source: "Document vault status + missing information",
+    source: "Document vault status + optional context to add later",
     action: "Update Vault"
   }
 ];
@@ -359,7 +409,7 @@ const featureCards: { title: string; text: string; icon: LucideIcon }[] = [
   },
   {
     title: "AI Family Insights",
-    text: "Transparent recommendations that distinguish verified, self-reported, and missing data.",
+    text: "Transparent recommendations that distinguish verified data, optional shared ranges, and context to add later.",
     icon: Sparkles
   }
 ];
@@ -672,7 +722,7 @@ function OnboardingPage({ onNavigate }: { onNavigate: (route: Route) => void }) 
         <img src={onboardingImage} alt="Family reviewing financial setup together around a tablet" />
         <div>
           <strong>Household setup, with consent at the center.</strong>
-          <span>FamilyOS uses onboarding to connect goals, accounts, roles, permissions, and missing information.</span>
+          <span>FamilyOS uses onboarding to connect goals, accounts, roles, permissions, and optional context families choose to share.</span>
         </div>
       </div>
       <div className="stepper">
@@ -775,15 +825,13 @@ function HouseholdGoalsStep() {
 }
 
 function AssetsStep() {
+  const [ranges, setRanges] = useState(() => Object.fromEntries(externalAssetRanges.map((item) => [item.label, item.current])));
   const cibc = ["CIBC Chequing", "CIBC Savings", "CIBC Mortgage", "CIBC Credit Card", "CIBC RESP", "CIBC TFSA", "CIBC RRSP"];
-  const external = [
-    ["External bank savings", "$54,000"],
-    ["External investments", "$218,000"],
-    ["Property value", "$950,000"],
-    ["Insurance coverage estimate", "$640,000"],
-    ["International / overseas assets optional", "$0"],
-    ["Debts or liabilities", "$40,000"]
-  ];
+
+  const skipExternalContext = () => {
+    setRanges(Object.fromEntries(externalAssetRanges.map((item) => [item.label, item.options.includes("None") ? "None" : "Prefer not to say"])));
+  };
+
   return (
     <div className="asset-split">
       <div>
@@ -801,16 +849,50 @@ function AssetsStep() {
       </div>
       <div>
         <DataLabel type="reported" />
-        <h2>Self-Reported External Assets</h2>
-        <p className="fineprint">
-          FamilyOS can include self-reported assets from other institutions to provide a more complete family picture.
-          These values are not verified by CIBC.
-        </p>
-        <div className="asset-inputs">
-          {external.map(([label, value]) => (
-            <Field key={label} label={label} value={value} />
+        <div className="card-title-row">
+          <div>
+            <h2>Shared by You: External Family Context</h2>
+            <p className="fineprint">
+              Optional: Add an approximate range for assets held outside CIBC. This helps FamilyOS create a more complete
+              household picture, improve goal planning, and make recommendations more relevant. You can skip any question
+              and update it later.
+            </p>
+            <p className="fineprint strong-note">We do not need exact values at this stage. Ranges are enough for planning.</p>
+          </div>
+          <button className="secondary-button compact" type="button" onClick={skipExternalContext}>
+            Skip for now
+          </button>
+        </div>
+        <div className="trust-card">
+          <ShieldCheck size={20} />
+          <div>
+            <strong>Your privacy matters.</strong>
+            <p>
+              Self-reported information is used only to personalize your FamilyOS view and recommendations. It does not
+              change account ownership, permissions, or access. You control what you share and can edit or remove it later.
+            </p>
+            <div className="trust-chip-row">
+              {["Optional", "Range-based", "Editable anytime", "Used for planning only", "Consent-based"].map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="range-grid">
+          {externalAssetRanges.map((item) => (
+            <RangeSelect
+              key={item.label}
+              label={item.label}
+              value={ranges[item.label]}
+              options={item.options}
+              onChange={(value) => setRanges((current) => ({ ...current, [item.label]: value }))}
+            />
           ))}
         </div>
+        <p className="fineprint">
+          You can complete this later from Settings &gt; Data Sources or from any planning module. FamilyOS will continue
+          normally if you skip or choose "Prefer not to say."
+        </p>
       </div>
     </div>
   );
@@ -861,11 +943,16 @@ function SummaryStep() {
       />
       <MetricCard
         icon={AlertTriangle}
-        title="Missing Information Notice"
-        value="3 items"
-        caption="External values are self-reported and may affect recommendation accuracy."
+        title="Optional Context to Add Later"
+        value="3 helpful items"
+        caption="External investments range, insurance coverage range, and estate document status can be added later to improve recommendations."
       />
       <div className="wide-card">
+        <h3>Your FamilyOS profile is ready</h3>
+        <p className="fineprint">
+          FamilyOS can still generate recommendations using verified CIBC data. Adding approximate ranges later may improve
+          planning accuracy without requiring exact values.
+        </p>
         <h3>Recommended first actions</h3>
         <ul className="task-list">
           {tasks.slice(0, 4).map((task) => (
@@ -1075,8 +1162,8 @@ function FamilyDashboard({ onNavigate }: { onNavigate: (route: Route) => void })
             onNavigate={onNavigate}
             stats={[
               ["Verified CIBC assets", "$412,000"],
-              ["Self-reported assets", "$836,000"],
-              ["Liabilities", "$530,000"]
+              ["External assets estimate", "$750K-$1M"],
+              ["Estimated household range", "$1.1M-$1.4M"]
             ]}
           />
           <PreviewCard
@@ -1096,7 +1183,7 @@ function FamilyDashboard({ onNavigate }: { onNavigate: (route: Route) => void })
             stats={[
               ["On track", "2 areas"],
               ["Needs review", "3 areas"],
-              ["Missing info", "Legacy"]
+              ["Add later", "Legacy docs"]
             ]}
           />
           <PreviewCard
@@ -1656,7 +1743,7 @@ function Investments() {
           {[
             {
               text: "Based on Emma's university timeline, a 1-2 year non-cashable GIC may fit better than a 5-year locked option.",
-              source: "Verified CIBC RESP + self-reported education timeline",
+              source: "Verified CIBC data + self-reported ranges",
               confidence: "Medium",
               action: "Compare Education GIC Options"
             },
@@ -1668,13 +1755,13 @@ function Investments() {
             },
             {
               text: "Your TFSA contribution room may allow tax-efficient growth, but contribution limits should be confirmed.",
-              source: "Verified CIBC TFSA summary + missing external contribution history",
+              source: "Verified CIBC data only + missing external context",
               confidence: "Medium",
               action: "Review TFSA Scenario"
             },
             {
-              text: "Some self-reported external assets are not verified, so recommendations involving total household liquidity should be reviewed.",
-              source: "Self-reported external assets + verified CIBC balances",
+              text: "Approximate external ranges can improve household liquidity recommendations without requiring exact balances.",
+              source: "Verified CIBC data + optional shared ranges",
               confidence: "Medium",
               action: "Book Advisor Review"
             }
@@ -1842,7 +1929,7 @@ function AIInsightsPage({ onNavigate }: { onNavigate: (route: Route) => void }) 
       kicker="AI Insights"
       title="Transparent family recommendations"
       summary="AI can explain risks and next actions, but major financial, legal, tax, and investment decisions should be reviewed with a CIBC advisor."
-      insight="Recommendations distinguish verified CIBC data, self-reported inputs, and missing information."
+      insight="Recommendations distinguish verified CIBC data, optional self-reported ranges, and context that can be added later."
     >
       <div className="insight-page-grid">
         {aiInsights.map((insight) => (
@@ -1874,13 +1961,34 @@ function SettingsPage() {
       summary="Control what FamilyOS can use and how recommendations appear."
       insight="FamilyOS recommendations are informational and should be reviewed with a CIBC advisor for major financial decisions."
     >
+      <Panel title="Self-Reported Family Context">
+        <p>
+          You can update, remove, or skip self-reported values at any time. These values are used to improve planning
+          recommendations and are not verified by CIBC.
+        </p>
+        <div className="data-source-list">
+          {selfReportedContext.map(([label, value]) => (
+            <article key={label} className="data-source-row">
+              <div>
+                <span>{label}</span>
+                <strong>{value}</strong>
+                <small>Shared by you, approximate range</small>
+              </div>
+              <div>
+                <button className="secondary-button compact">Edit</button>
+                <button className="ghost-button compact">Remove</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </Panel>
       <div className="settings-grid">
         {[
-          ["Data sources", "Verified CIBC accounts, uploaded documents, self-reported external values"],
+          ["Data sources", "Verified CIBC accounts, uploaded documents, and optional family context shared by you"],
           ["Connected CIBC accounts", "Chequing, savings, mortgage, card, RESP, TFSA, RRSP"],
-          ["Self-reported external assets", "External savings, investments, property, insurance, liabilities"],
+          ["Shared external ranges", "Approximate ranges for savings, investments, property, insurance, and liabilities"],
           ["Consent management", "Role-based sharing and revocable access"],
-          ["AI recommendation settings", "Show data source, confidence, and missing information"],
+          ["AI recommendation settings", "Show data source, confidence, and context that can be added later"],
           ["Notification preferences", "Tasks, unusual activity, renewals, education timeline, care alerts"],
           ["Privacy disclaimer", "Recommendations are informational and require advisor review for major decisions"]
         ].map(([title, text]) => (
@@ -1898,9 +2006,9 @@ function AccountsPage() {
     <ModulePage
       icon={WalletCards}
       kicker="Accounts"
-      title="Verified and self-reported household accounts"
-      summary="Combine a CIBC-verified view with optional external values so the family picture is more complete."
-      insight="Self-reported values are useful for planning but should be refreshed before major decisions."
+      title="Verified accounts and optional family context"
+      summary="Combine a CIBC-verified view with approximate external ranges families choose to share."
+      insight="Shared ranges are useful for planning but do not change ownership, permissions, or account access."
     >
       <div className="module-grid">
         <MetricTile label="CIBC Chequing" value="$18,400" />
@@ -1909,8 +2017,10 @@ function AccountsPage() {
         <MetricTile label="CIBC Mortgage" value="$490,000" />
         <MetricTile label="CIBC RESP" value="$32,000" />
         <MetricTile label="CIBC TFSA" value="$42,000" />
-        <MetricTile label="External investments" value="$218,000" />
-        <MetricTile label="Property estimate" value="$950,000" />
+        <MetricTile label="External investments range" value="Prefer not to say" />
+        <MetricTile label="Property value range" value="$750K-$1M" />
+        <MetricTile label="External assets estimate" value="$750K-$1M" />
+        <MetricTile label="Liabilities estimate" value="$500K-$750K" />
       </div>
     </ModulePage>
   );
@@ -2003,6 +2113,29 @@ function ScenarioSelect({
   return (
     <label className="field">
       {label}
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        {options.map((option) => (
+          <option key={option}>{option}</option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function RangeSelect({
+  label,
+  value,
+  options,
+  onChange
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="range-select">
+      <span>{label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)}>
         {options.map((option) => (
           <option key={option}>{option}</option>
@@ -2107,7 +2240,7 @@ function Toggle({ label, defaultChecked }: { label: string; defaultChecked?: boo
 }
 
 function DataLabel({ type }: { type: "verified" | "reported" }) {
-  return <span className={`data-label ${type}`}>{type === "verified" ? "Verified by CIBC" : "Self-Reported"}</span>;
+  return <span className={`data-label ${type}`}>{type === "verified" ? "Verified by CIBC" : "Shared by you"}</span>;
 }
 
 function MetricCard({ icon: Icon, title, value, caption }: { icon: LucideIcon; title: string; value: string; caption: string }) {
@@ -2264,7 +2397,8 @@ function routeFromAction(category: string, onNavigate: (route: Route) => void) {
     Subscriptions: "subscriptions",
     Investments: "investments",
     Protection: "protection",
-    "Wealth & Legacy": "legacy"
+    "Wealth & Legacy": "legacy",
+    Planning: "settings"
   };
   onNavigate(routes[category] ?? "family");
 }
