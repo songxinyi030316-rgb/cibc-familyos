@@ -1488,23 +1488,127 @@ button {
   border-bottom: 0;
 }
 
+.education-timeline {
+  position: relative;
+  display: grid;
+  gap: 0;
+  margin-top: 4px;
+}
+
 .timeline-item {
   position: relative;
-  min-height: 42px;
-  color: var(--muted);
-  font-weight: 800;
+  align-items: stretch;
+  gap: 14px;
+  min-height: 104px;
+  color: var(--ink);
+  font-weight: 700;
 }
 
-.timeline-item i {
-  width: 18px;
-  height: 18px;
+.timeline-item:not(.last)::before {
+  position: absolute;
+  top: 34px;
+  bottom: -8px;
+  left: 15px;
+  width: 2px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(142, 11, 46, 0.55), rgba(188, 155, 82, 0.18));
+  content: "";
+}
+
+.timeline-marker {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 32px;
+  display: grid;
+  place-items: start center;
+  padding-top: 3px;
+}
+
+.timeline-marker i {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
   border: 3px solid #d8d1d4;
   border-radius: 50%;
+  background: #fff;
+  color: #fff;
+  box-shadow: 0 0 0 7px #fff;
 }
 
-.timeline-item.done i {
+.timeline-item.active .timeline-marker i {
   border-color: var(--maroon);
   background: var(--maroon);
+}
+
+.timeline-item.review .timeline-marker i {
+  border-color: #bc9b52;
+  background: #fff8e8;
+}
+
+.timeline-content {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 15px;
+  background: linear-gradient(180deg, #fff, #fbf9fa);
+  box-shadow: 0 12px 26px rgba(31, 23, 27, 0.04);
+}
+
+.timeline-item.active .timeline-content {
+  border-color: rgba(142, 11, 46, 0.22);
+  background: linear-gradient(180deg, #fff7f9, #fff);
+}
+
+.timeline-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.timeline-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.timeline-status {
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #f2eef0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.timeline-status.active {
+  background: #eaf6ef;
+  color: #17633c;
+}
+
+.timeline-status.review {
+  background: #fff3d6;
+  color: #855f00;
+}
+
+.timeline-content strong {
+  display: block;
+  color: var(--ink);
+  font-size: 17px;
+}
+
+.timeline-content p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
 }
 
 .table-row {

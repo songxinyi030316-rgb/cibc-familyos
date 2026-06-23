@@ -1213,6 +1213,57 @@ function FamilyDashboard({ onNavigate }: { onNavigate: (route: Route) => void })
 }
 
 function EducationPlanner() {
+  const transitionMilestones: Array<{
+    label: string;
+    date: string;
+    status: string;
+    tone: "active" | "review" | "future";
+    detail: string;
+  }> = [
+    {
+      label: "Grade 12",
+      date: "Now - Spring 2027",
+      status: "In progress",
+      tone: "active",
+      detail: "Finalize school choices, RESP withdrawal timing, OSAP/scholarship checklist, and student banking setup."
+    },
+    {
+      label: "First year university",
+      date: "Fall 2027",
+      status: "Planning",
+      tone: "review",
+      detail: "Prepare tuition payments, monthly support transfers, rent budget, and first-year spending guardrails."
+    },
+    {
+      label: "First rental lease",
+      date: "Summer 2027",
+      status: "Needs review",
+      tone: "review",
+      detail: "Estimate deposits, guarantor needs, tenant insurance, utilities, and a shared move-in expense plan."
+    },
+    {
+      label: "First credit card",
+      date: "Fall 2027",
+      status: "Guided setup",
+      tone: "future",
+      detail: "Introduce credit-building with a low limit, payment reminders, and parent-visible education alerts if Emma consents."
+    },
+    {
+      label: "First internship",
+      date: "2029",
+      status: "Future",
+      tone: "future",
+      detail: "Shift from parent support toward earned income, tax filing habits, and early TFSA contribution planning."
+    },
+    {
+      label: "Graduation",
+      date: "2031",
+      status: "Future",
+      tone: "future",
+      detail: "Plan student debt repayment, emergency reserve, independent insurance, and long-term investing habits."
+    }
+  ];
+
   return (
     <ModulePage
       icon={GraduationCap}
@@ -1251,11 +1302,19 @@ function EducationPlanner() {
           ))}
         </Panel>
         <Panel title="Transition Timeline">
-          {["Grade 12", "First year university", "First rental lease", "First credit card", "First internship", "Graduation"].map(
-            (item, index) => (
-              <TimelineItem key={item} label={item} done={index < 1} />
-            )
-          )}
+          <div className="education-timeline">
+            {transitionMilestones.map((milestone, index) => (
+              <TimelineItem
+                key={milestone.label}
+                label={milestone.label}
+                date={milestone.date}
+                status={milestone.status}
+                detail={milestone.detail}
+                tone={milestone.tone}
+                isLast={index === transitionMilestones.length - 1}
+              />
+            ))}
+          </div>
         </Panel>
       </div>
     </ModulePage>
@@ -2355,11 +2414,37 @@ function CheckLine({ children }: { children: ReactNode }) {
   );
 }
 
-function TimelineItem({ label, done }: { label: string; done?: boolean }) {
+function TimelineItem({
+  label,
+  date,
+  status,
+  detail,
+  tone = "future",
+  isLast
+}: {
+  label: string;
+  date: string;
+  status: string;
+  detail: string;
+  tone?: "active" | "review" | "future";
+  isLast?: boolean;
+}) {
   return (
-    <div className={`timeline-item ${done ? "done" : ""}`}>
-      <i />
-      <span>{label}</span>
+    <div className={`timeline-item ${tone} ${isLast ? "last" : ""}`}>
+      <div className="timeline-marker" aria-hidden="true">
+        <i>{tone === "active" ? <CheckCircle2 size={16} /> : null}</i>
+      </div>
+      <div className="timeline-content">
+        <div className="timeline-topline">
+          <span className="timeline-date">
+            <CalendarClock size={14} />
+            {date}
+          </span>
+          <span className={`timeline-status ${tone}`}>{status}</span>
+        </div>
+        <strong>{label}</strong>
+        <p>{detail}</p>
+      </div>
     </div>
   );
 }
