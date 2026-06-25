@@ -127,9 +127,9 @@ const familyMembers: FamilyMember[] = [
 
 const navItems: { route: Route; label: string; icon: LucideIcon }[] = [
   { route: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { route: "ai", label: "Opportunity Detector", icon: Sparkles },
   { route: "planning", label: "Family Status", icon: Gauge },
   { route: "investments", label: "Goal Evaluator", icon: PiggyBank },
-  { route: "ai", label: "AI Coach", icon: Sparkles },
   { route: "family", label: "Family Admin", icon: UsersRound },
   { route: "settings", label: "Settings", icon: Settings }
 ];
@@ -273,6 +273,22 @@ const subscriptions = [
 
 const aiInsights = [
   {
+    category: "Life Stage",
+    title: "Emma is approaching the student banking moment",
+    body: "Emma turns 18 before university. FamilyOS can help the family prepare account ownership, student banking, credit education, and RESP withdrawal planning.",
+    confidence: "High",
+    source: "Family profile age + verified RESP context",
+    action: "Open Life Stage Plan"
+  },
+  {
+    category: "Life Stage",
+    title: "Ethan is ready for early money habits",
+    body: "At age 11, Ethan may benefit from a parent-guided savings goal, allowance rhythm, and age-appropriate financial literacy prompts.",
+    confidence: "Medium",
+    source: "Family profile age only",
+    action: "Create Money Habit Plan"
+  },
+  {
     category: "Education",
     title: "Emma's university living costs may exceed current savings plan",
     body: "Projected first-year cost is $28,500. Current RESP path may fall short by $7,800.",
@@ -389,8 +405,13 @@ const tasks = [
 
 const featureCards: { title: string; text: string; icon: LucideIcon }[] = [
   {
+    title: "Family Opportunity Detector",
+    text: "Detect age-based family moments that can naturally route members toward relevant CIBC support.",
+    icon: Sparkles
+  },
+  {
     title: "Family Opportunity Dashboard",
-    text: "A household-level view of what your family may need to do next.",
+    text: "A household-level view of what your family may need to do next and which CIBC pathway may help.",
     icon: LayoutDashboard
   },
   {
@@ -414,11 +435,75 @@ const featureCards: { title: string; text: string; icon: LucideIcon }[] = [
     icon: ScrollText
   },
   {
-    title: "AI Coach",
-    text: "Opportunity detection that explains data sources, confidence, and recommended next actions.",
+    title: "AI Family Assistant",
+    text: "Transparent, consent-aware prompts that connect family opportunities to existing CIBC pathways.",
     icon: Sparkles
   }
 ];
+
+const lifeStageMoments = [
+  {
+    member: "Ethan Chen",
+    age: "11",
+    stage: "Early money habits",
+    timing: "Now",
+    trigger: "Pre-teen learning window",
+    recommendation: "Start a parent-guided savings goal, allowance rhythm, and simple spending reflection.",
+    pathway: "Youth savings habits + family goal coaching",
+    cta: "Create habit plan",
+    route: "education" as Route,
+    status: "On Track",
+    icon: PiggyBank
+  },
+  {
+    member: "Emma Chen",
+    age: "17",
+    stage: "University transition",
+    timing: "Next 10 months",
+    trigger: "Turns 18 before first-year tuition",
+    recommendation: "Prepare student banking, account ownership, credit education, RESP withdrawals, and rent support.",
+    pathway: "Smart Start / student banking + RESP planning",
+    cta: "Open Emma plan",
+    route: "education" as Route,
+    status: "Action Recommended",
+    icon: GraduationCap
+  },
+  {
+    member: "Alex & Jamie",
+    age: "40s",
+    stage: "Parent peak-responsibility years",
+    timing: "This year",
+    trigger: "Mortgage, education, subscriptions, and caregiving overlap",
+    recommendation: "Coordinate cash flow, GIC liquidity, protection coverage, and advisor review around family goals.",
+    pathway: "Goal Evaluator + CIBC advisor routing",
+    cta: "Evaluate goals",
+    route: "investments" as Route,
+    status: "Needs Review",
+    icon: Gauge
+  },
+  {
+    member: "Grace Chen",
+    age: "72",
+    stage: "Caregiving and legacy support",
+    timing: "This quarter",
+    trigger: "Rising care spending and permissioned support",
+    recommendation: "Review care budget, trusted access, unusual activity alerts, POA documents, and emergency contacts.",
+    pathway: "Caregiving mode + documents vault",
+    cta: "Review care plan",
+    route: "caregiving" as Route,
+    status: "Action Recommended",
+    icon: HeartPulse
+  }
+];
+
+const youthLifecyclePath = [
+  ["Age 0-5", "Start education savings", "RESP education, contribution rhythm, family goal setup"],
+  ["Age 6", "Primary school moment", "School cost planning, allowance basics, parent coaching prompts"],
+  ["Age 12", "Money habit builder", "Savings goals, supervised spending, digital money confidence"],
+  ["Age 16", "First job readiness", "Payroll deposit, budgeting, tax basics, spending alerts"],
+  ["Age 18", "Student banking transition", "Own account, consent reset, credit education, RESP withdrawals"],
+  ["Age 21-25", "Independent financial life", "Credit building, emergency reserve, TFSA education, first investing"]
+] as const;
 
 const gicRates = {
   Cashable: {
@@ -1106,11 +1191,19 @@ function renderRoute(
 function DashboardPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
   const opportunities = [
     {
-      category: "Education",
-      title: "Emma's RESP path may fall short by $7,800",
-      why: "First-year costs are estimated at $28,500 and the current RESP plan may need a contribution adjustment.",
-      action: "Compare RESP support, monthly transfer, and student banking options.",
-      cta: "Review Education Plan",
+      category: "Life Stage",
+      title: "Emma is approaching the CIBC student banking moment",
+      why: "She turns 18 before university, when account ownership, student banking, credit education, and RESP withdrawals become more urgent.",
+      action: "Prepare the transition checklist and decide what Emma controls herself.",
+      cta: "Open Life Stage Plan",
+      route: "ai" as Route
+    },
+    {
+      category: "Life Stage",
+      title: "Ethan is ready for early money habits",
+      why: "At age 11, FamilyOS can help parents introduce savings goals and allowance routines before teen spending begins.",
+      action: "Create a parent-guided habit plan that can later lead into youth banking.",
+      cta: "Open Education Path",
       route: "education" as Route
     },
     {
@@ -1136,14 +1229,6 @@ function DashboardPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
       action: "Review the flagged transaction and adjust care alerts.",
       cta: "Review Caregiving",
       route: "caregiving" as Route
-    },
-    {
-      category: "Legacy",
-      title: "Legacy documents are missing or outdated",
-      why: "Grace's Power of Attorney is not uploaded and estate documents have not been updated in 3 years.",
-      action: "Upload key documents and refresh beneficiary records.",
-      cta: "Upload Documents",
-      route: "documents" as Route
     }
   ];
 
@@ -1151,11 +1236,14 @@ function DashboardPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
     <main className="family-dashboard">
       <section className="priority-banner">
         <div>
-          <span>Family Opportunity AI</span>
-          <h2>What should the Chen family do next?</h2>
-          <p>Families do not need another dashboard. They need to know what to do next.</p>
+          <span>Family Opportunity Detector</span>
+          <h2>FamilyOS found 4 moments where CIBC can help</h2>
+          <p>
+            This is not a separate replacement product. It detects family opportunities and routes members toward
+            existing CIBC tools, accounts, products, and advisor support at the right moment.
+          </p>
           <button className="primary-button compact" onClick={() => onNavigate("ai")}>
-            View AI timeline
+            View detected opportunities
           </button>
         </div>
         <div className="priority-visual">
@@ -1163,12 +1251,17 @@ function DashboardPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
         </div>
       </section>
 
+      <LifeStageMap onNavigate={onNavigate} />
+
       <FamilyOSLayerMap onNavigate={onNavigate} />
 
       <section className="recommended-actions">
         <div className="section-heading">
-          <h2>Today's Family Opportunities</h2>
-          <p>Start with the highest-impact household opportunities detected from goals, permissions, and CIBC data.</p>
+          <h2>Next Best Family Actions</h2>
+          <p>
+            Recommendations start with family life moments, then create natural reasons to explore CIBC support when it
+            is relevant.
+          </p>
         </div>
         <div className="opportunity-grid">
           {opportunities.map((item) => (
@@ -1200,38 +1293,38 @@ function DashboardPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
 
       <section className="module-preview-section">
         <div className="section-heading">
-          <h2>Household Summary</h2>
-          <p>Only the key context needed to support next-best family actions.</p>
+          <h2>Relationship Growth Pathways</h2>
+          <p>How FamilyOS can attract the next family member to CIBC by detecting the right moment to introduce support.</p>
         </div>
         <div className="module-preview-grid compact-preview">
           <PreviewCard
-            title="Estimated Household Picture"
-            route="accounts"
-            onNavigate={onNavigate}
-            stats={[
-              ["Verified CIBC assets", "$412,000"],
-              ["External assets estimate", "$750K-$1M"],
-              ["Estimated household range", "$1.1M-$1.4M"]
-            ]}
-          />
-          <PreviewCard
-            title="Goal Capability"
-            route="investments"
-            onNavigate={onNavigate}
-            stats={[
-              ["Cash flow efficiency", "31% capacity"],
-              ["Goal funding readiness", "Moderate"],
-              ["Product pathway", "GIC + fund mix"]
-            ]}
-          />
-          <PreviewCard
-            title="Upcoming Tasks"
+            title="Youth-to-Student Pathway"
             route="ai"
             onNavigate={onNavigate}
             stats={[
-              ["RESP review", "This week"],
-              ["Grace alert", "Needs review"],
-              ["Trial cards", "2 ending"]
+              ["Ethan", "Money habits"],
+              ["Emma", "Student banking"],
+              ["CIBC value", "Next-generation loyalty"]
+            ]}
+          />
+          <PreviewCard
+            title="Goal-to-Product Pathway"
+            route="investments"
+            onNavigate={onNavigate}
+            stats={[
+              ["Education", "RESP + GIC timing"],
+              ["Emergency", "Liquidity review"],
+              ["Advisor", "Suitability check"]
+            ]}
+          />
+          <PreviewCard
+            title="Care-to-Legacy Pathway"
+            route="caregiving"
+            onNavigate={onNavigate}
+            stats={[
+              ["Grace", "Care budget"],
+              ["Documents", "POA + will"],
+              ["Permissions", "Consent-based access"]
             ]}
           />
         </div>
@@ -1376,6 +1469,7 @@ function PlanningPage({
 
 function PlanningOverview({ onNavigate }: { onNavigate: (route: Route) => void }) {
   const cards = [
+    ["Family opportunities", "Action Recommended", "Emma turns 18 before university; Ethan is ready for money habits.", "Open Opportunity Detector", "ai"],
     ["Education", "Needs Review", "RESP path may fall short by $7,800.", "Open Education Plan", "education"],
     ["Housing", "On Track", "Mortgage renewal preparation starts in 8 months.", "Open Housing Plan", "housing"],
     ["Subscriptions", "Action Recommended", "Two trials convert to paid plans this week.", "Manage Subscriptions", "subscriptions"],
@@ -1387,7 +1481,7 @@ function PlanningOverview({ onNavigate }: { onNavigate: (route: Route) => void }
     <main className="module-page planning-overview">
       <div className="section-heading">
         <h2>Family Status Overview</h2>
-        <p>Layer 1 summarizes the household's current responsibilities before Goal Evaluator assesses capability.</p>
+        <p>Layer 2 summarizes the household's current responsibilities after Opportunity Detector identifies what is coming next.</p>
       </div>
       <FamilyStatusVisual />
       <div className="planning-card-grid">
@@ -1470,6 +1564,24 @@ function EducationPlanner() {
       image={educationImage}
       imageAlt="Parent and student reviewing university planning on a tablet"
     >
+      <Panel title="AI Age-Stage Pathway">
+        <div className="age-pathway">
+          {youthLifecyclePath.map(([age, moment, detail]) => (
+            <article className={age === "Age 18" ? "active" : ""} key={age}>
+              <span>{age}</span>
+              <strong>{moment}</strong>
+              <p>{detail}</p>
+            </article>
+          ))}
+        </div>
+        <div className="advisor-disclaimer">
+          <Sparkles size={17} />
+          <span>
+            FamilyOS does not replace CIBC products. It detects family opportunities and recommends when an existing
+            CIBC tool, student banking path, RESP planning moment, or advisor conversation may be relevant.
+          </span>
+        </div>
+      </Panel>
       <div className="module-grid">
         {[
           ["University target year", "2027"],
@@ -2312,19 +2424,23 @@ function PermissionsPage({ compact = false }: { compact?: boolean }) {
 
 function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
   const opportunityTimeline = [
+    ["Age 6", "Primary school planning moment", "FamilyOS can prompt parents to set a school-year spending rhythm, update RESP goals, and introduce simple savings habits.", "View education path", "education"],
+    ["Age 12", "Money habit builder", "Pre-teen years are a good time for allowance goals, supervised spending conversations, and parent-led financial confidence.", "View education path", "education"],
+    ["Age 16", "First job readiness", "A first paycheque can trigger payroll deposit education, spending alerts, tax basics, and saving goals.", "Open Goal Evaluator", "investments"],
     ["In 4 days", "Meal Kit trial becomes paid", "Subscription Control can guide cancellation, spending cap, or trial-card controls.", "Manage Subscriptions", "subscriptions"],
-    ["In 10 months", "Emma turns 18", "FamilyOS can surface FHSA education, credit-building basics, and student banking next steps.", "Review Education Plan", "education"],
+    ["In 10 months", "Emma turns 18", "FamilyOS can surface student banking, account ownership, credit-building basics, and consent reset steps.", "Review Education Plan", "education"],
     ["In 14 months", "Mortgage renewal preparation window", "Start reviewing documents, HELOC utilization, and renewal scenarios before the pressure window.", "Open Housing Plan", "housing"],
     ["In 18 months", "First-year university funding deadline", "RESP withdrawals, rent support, scholarships, and OSAP planning should be coordinated.", "Review Education Plan", "education"],
-    ["At age 65", "RRSP to RRIF education milestone", "AI Coach can remind the family to learn about registered retirement income transitions.", "Open GIC Advisor", "investments"],
+    ["At age 65", "RRSP to RRIF education milestone", "FamilyOS can remind the family to learn about registered retirement income transitions.", "Open GIC Advisor", "investments"],
     ["Grace", "Long-term care review recommended", "Care spending is rising and Grace's permissioned care budget may need a family review.", "Review Caregiving", "caregiving"],
-    ["Future event", "New baby RESP opportunity", "If a new child is added to the family profile, AI Coach can route the family to RESP education and advisor booking.", "View family setup", "family"],
+    ["Future event", "New baby RESP opportunity", "If a new child is added to the family profile, FamilyOS can route the family to RESP education and advisor booking.", "View family setup", "family"],
     ["Future event", "First job income event", "A first job can trigger TFSA education, budgeting prompts, and payroll deposit setup guidance.", "Open Goal Evaluator", "investments"]
   ] as const;
 
   const eligibilityEvents = [
+    ["Child starts school", "Education savings + money habits"],
     ["New baby", "RESP opportunity"],
-    ["Child turns 18", "FHSA / credit education"],
+    ["Child turns 18", "Student account + credit education"],
     ["First job", "TFSA and budgeting education"],
     ["Home purchase", "Mortgage and insurance review"],
     ["Marriage", "Joint financial planning"],
@@ -2334,6 +2450,8 @@ function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
   ];
 
   const nextBestActions = [
+    ["Emma age-18 transition", "Prepare student banking, account ownership, credit education, and RESP withdrawal timing.", "Life Stage", "education"],
+    ["Ethan money habits", "Create an age-appropriate savings habit plan that can later transition into youth banking.", "Life Stage", "education"],
     ["Education Plan", "Review Emma's projected university funding gap and living expense plan.", "Education", "education"],
     ["Housing Plan", "Prepare for mortgage renewal and HELOC review before renewal season.", "Housing", "housing"],
     ["Subscription Control", "Manage two free trials converting this week.", "Subscriptions", "subscriptions"],
@@ -2345,18 +2463,36 @@ function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
   return (
     <ModulePage
       icon={Sparkles}
-      kicker="AI Coach"
-      title="Family Opportunity AI"
-      summary="FamilyOS scans life stages, product eligibility, household goals, and verified CIBC data to identify what your family may need to consider next."
-      insight="AI Coach provides educational prompts and planning reminders. It does not open accounts, move money, or make legal, tax, insurance, or investment decisions without user consent and advisor review."
+      kicker="Family Opportunity Detector"
+      title="AI detector for family banking moments"
+      summary="FamilyOS scans age stages, family roles, product eligibility, household goals, and verified CIBC data to identify timely opportunities where CIBC can help."
+      insight="The goal is not to create an entirely new financial product. FamilyOS detects moments that can attract family members toward existing CIBC tools, accounts, products, and advisors."
     >
+      <LifeStageMap onNavigate={onNavigate} />
+
+      <Panel title="CIBC Relationship Strategy">
+        <div className="strategy-strip">
+          {[
+            ["Detect", "Find natural family moments such as school start, first job, age 18, caregiving, or retirement."],
+            ["Explain", "Show why the moment matters using plain language, data source, confidence, and consent notes."],
+            ["Route", "Send the family to the relevant CIBC pathway, product education, account setup, or advisor review."],
+            ["Grow", "Help parents introduce children and relatives to CIBC through useful support instead of generic marketing."]
+          ].map(([title, text]) => (
+            <article key={title}>
+              <strong>{title}</strong>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </Panel>
+
       <Panel title="Opportunity Detection Workflow">
         <div className="workflow-rail">
           {[
-            ["Family member age", "Detect upcoming eligibility changes such as Emma turning 18."],
+            ["Family member age", "Detect upcoming life-stage changes such as school entry, first job, age 18, caregiving, and retirement."],
             ["Account structure", "Check RESP, TFSA, RRSP, mortgage, cards, and permissioned care context."],
-            ["Future eligibility change", "Map life stage to products such as FHSA, RESP, TFSA, RRSP/RRIF, GIC, mortgage, or advisor booking."],
-            ["Trigger insight", "Explain why it matters, what data was used, and where the family should go next."]
+            ["CIBC pathway match", "Map life stage to helpful pathways such as RESP, youth/student banking, GICs, mortgages, alerts, or advisor booking."],
+            ["Consent-based action", "Explain why it matters, what data was used, and what the family can choose to do next."]
           ].map(([title, text]) => (
             <article key={title}>
               <span>{title}</span>
@@ -2367,6 +2503,23 @@ function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
       </Panel>
 
       <AIProductRoutingMap />
+
+      <Panel title="Family Relationship Growth Loop">
+        <div className="growth-loop">
+          {[
+            ["Parent starts", "Alex and Jamie manage goals, RESP, mortgage, subscriptions, and caregiving in FamilyOS."],
+            ["Child included", "Emma and Ethan appear in age-stage planning with only permissioned visibility."],
+            ["Helpful moment", "FamilyOS recommends student banking, money habits, or RESP actions at the right age."],
+            ["CIBC relationship grows", "Children are introduced to CIBC through timely support, not generic advertising."]
+          ].map(([title, text], index) => (
+            <article key={title}>
+              <span>{index + 1}</span>
+              <strong>{title}</strong>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </Panel>
 
       <Panel title="Opportunity Timeline">
         <div className="opportunity-timeline">
@@ -2391,7 +2544,7 @@ function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
             ["FHSA awareness gap", "Emma turns 18 next year. FamilyOS can educate the family early, but Emma must qualify and act for herself."],
             ["RESP timing gap", "RESP withdrawal planning should begin before first-year tuition and rent deadlines."],
             ["RRSP to RRIF gap", "Retirement income education can start before mandatory conversion decisions."],
-            ["Product tool gap", "CIBC has strong individual tools; AI Coach connects them across family life events."]
+            ["Product tool gap", "CIBC has strong individual tools; Opportunity Detector connects them across family life events."]
           ].map(([title, text]) => (
             <article className="product-pathway-card compact" key={title}>
               <span>{title}</span>
@@ -2416,7 +2569,7 @@ function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
           <div className="advisor-disclaimer">
             <AlertTriangle size={17} />
             <span>
-              AI Coach provides educational prompts and planning reminders. It does not open accounts, move money, or make
+              Opportunity Detector provides educational prompts and planning reminders. It does not open accounts, move money, or make
               legal, tax, insurance, or investment decisions without user consent and advisor review.
             </span>
           </div>
@@ -2894,24 +3047,24 @@ function FamilyOSLayerMap({ onNavigate }: { onNavigate: (route: Route) => void }
   const layers: Array<{ title: string; label: string; route: Route; icon: LucideIcon; items: string[] }> = [
     {
       title: "Layer 1",
+      label: "Opportunity Detector",
+      route: "ai",
+      icon: Sparkles,
+      items: ["Ages", "Milestones", "Eligibility", "Next-best moments"]
+    },
+    {
+      title: "Layer 2",
       label: "Family Status",
       route: "planning",
       icon: Gauge,
       items: ["Education", "Housing", "Subscriptions", "Caregiving", "Protection"]
     },
     {
-      title: "Layer 2",
+      title: "Layer 3",
       label: "Goal Evaluator",
       route: "investments",
       icon: PiggyBank,
       items: ["Cash flow", "Goals", "GIC", "Mutual funds", "Liquidity"]
-    },
-    {
-      title: "Layer 3",
-      label: "AI Coach",
-      route: "ai",
-      icon: Sparkles,
-      items: ["Eligibility events", "Next-best actions", "Advisor routing"]
     },
     {
       title: "Layer 4",
@@ -2926,7 +3079,7 @@ function FamilyOSLayerMap({ onNavigate }: { onNavigate: (route: Route) => void }
     <section className="visual-panel">
       <div className="section-heading">
         <h2>How FamilyOS Thinks</h2>
-        <p>A layered model that turns family context into clear next actions.</p>
+        <p>A layered model that detects household opportunities and routes them into existing CIBC pathways.</p>
       </div>
       <div className="layer-map">
         {layers.map(({ title, label, route, icon: Icon, items }) => (
@@ -2938,6 +3091,44 @@ function FamilyOSLayerMap({ onNavigate }: { onNavigate: (route: Route) => void }
             </div>
             <p>{items.join(" · ")}</p>
           </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LifeStageMap({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  return (
+    <section className="visual-panel">
+      <div className="section-heading">
+        <h2>Family Life Stage Map</h2>
+        <p>
+          The detector watches each family member's stage and surfaces timely moments where CIBC can be helpful without
+          forcing a product decision.
+        </p>
+      </div>
+      <div className="life-stage-map">
+        {lifeStageMoments.map(({ member, age, stage, timing, trigger, recommendation, pathway, cta, route, status, icon: Icon }) => (
+          <article className="life-stage-card" key={member}>
+            <div className="life-stage-age">
+              <Icon size={18} />
+              <strong>{age}</strong>
+            </div>
+            <div>
+              <span>{timing}</span>
+              <h3>{member}</h3>
+              <strong>{stage}</strong>
+              <p>{trigger}</p>
+              <small>{recommendation}</small>
+              <div className="life-stage-footer">
+                <StatusChip status={status} />
+                <button className="secondary-button compact" onClick={() => onNavigate(route)}>
+                  {cta}
+                </button>
+              </div>
+              <em>{pathway}</em>
+            </div>
+          </article>
         ))}
       </div>
     </section>
@@ -3013,16 +3204,17 @@ function AIProductRoutingMap() {
   return (
     <section className="visual-panel">
       <div className="section-heading">
-        <h2>From Life Event to CIBC Pathway</h2>
-        <p>AI Coach stays educational: it detects eligibility moments and routes to tools, products, or advisors.</p>
+        <h2>From Family Opportunity to CIBC Pathway</h2>
+        <p>The assistant stays educational: it detects eligibility moments and routes to existing CIBC support.</p>
       </div>
       <div className="routing-map">
         {[
-          ["Child turns 18", "FHSA education", "Student banking", "Advisor"],
+          ["Age 6 school start", "RESP goal refresh", "Money habits", "Parent prompt"],
+          ["Age 12 habits", "Savings confidence", "Allowance goals", "FamilyOS"],
+          ["Age 16 first job", "Payroll deposit", "Budget coaching", "Alerts"],
+          ["Child turns 18", "Student banking", "Credit education", "Consent reset"],
           ["New baby", "RESP education", "Contribution plan", "Advisor"],
-          ["First job", "TFSA education", "Budget coaching", "Payroll setup"],
-          ["Retirement age", "RRSP/RRIF education", "Income planning", "Advisor"],
-          ["Home purchase", "Mortgage", "Insurance review", "Calculator"]
+          ["Retirement age", "RRSP/RRIF education", "Income planning", "Advisor"]
         ].map(([trigger, path, action, destination]) => (
           <article key={trigger}>
             <span>{trigger}</span>
@@ -3114,7 +3306,8 @@ function DataTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
 function routeTitle(route: Route) {
   const titles: Partial<Record<Route, string>> = {
     overview: "Dashboard",
-    insights: "AI Coach"
+    insights: "Opportunity Detector",
+    ai: "Opportunity Detector"
   };
   return titles[route] ?? navItems.find((item) => item.route === route)?.label ?? "Dashboard";
 }
@@ -3127,6 +3320,7 @@ function routeFromAction(category: string, onNavigate: (route: Route) => void) {
     "Cash Flow": "cashflow",
     Subscriptions: "subscriptions",
     Investments: "investments",
+    "Life Stage": "ai",
     Protection: "protection",
     "Wealth & Legacy": "legacy",
     Planning: "settings",
