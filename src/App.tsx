@@ -1163,6 +1163,8 @@ function DashboardPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
         </div>
       </section>
 
+      <FamilyOSLayerMap onNavigate={onNavigate} />
+
       <section className="recommended-actions">
         <div className="section-heading">
           <h2>Today's Family Opportunities</h2>
@@ -1387,6 +1389,7 @@ function PlanningOverview({ onNavigate }: { onNavigate: (route: Route) => void }
         <h2>Family Status Overview</h2>
         <p>Layer 1 summarizes the household's current responsibilities before Goal Evaluator assesses capability.</p>
       </div>
+      <FamilyStatusVisual />
       <div className="planning-card-grid">
         {cards.map(([title, status, text, cta, route]) => (
           <article className="planning-card" key={title}>
@@ -1851,6 +1854,8 @@ function Investments() {
         <AlertTriangle size={17} />
         <span>These rates are illustrative for prototype purposes only.</span>
       </div>
+
+      <GoalCapabilityBridge />
 
       <section className="goal-evaluator-grid">
         <Panel title="Family Goal Capability">
@@ -2360,6 +2365,8 @@ function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
           ))}
         </div>
       </Panel>
+
+      <AIProductRoutingMap />
 
       <Panel title="Opportunity Timeline">
         <div className="opportunity-timeline">
@@ -2880,6 +2887,152 @@ function CheckLine({ children }: { children: ReactNode }) {
       <CheckCircle2 size={17} />
       <span>{children}</span>
     </div>
+  );
+}
+
+function FamilyOSLayerMap({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  const layers: Array<{ title: string; label: string; route: Route; icon: LucideIcon; items: string[] }> = [
+    {
+      title: "Layer 1",
+      label: "Family Status",
+      route: "planning",
+      icon: Gauge,
+      items: ["Education", "Housing", "Subscriptions", "Caregiving", "Protection"]
+    },
+    {
+      title: "Layer 2",
+      label: "Goal Evaluator",
+      route: "investments",
+      icon: PiggyBank,
+      items: ["Cash flow", "Goals", "GIC", "Mutual funds", "Liquidity"]
+    },
+    {
+      title: "Layer 3",
+      label: "AI Coach",
+      route: "ai",
+      icon: Sparkles,
+      items: ["Eligibility events", "Next-best actions", "Advisor routing"]
+    },
+    {
+      title: "Layer 4",
+      label: "Family Admin",
+      route: "family",
+      icon: UsersRound,
+      items: ["Members", "Ownership", "Permissions", "Documents"]
+    }
+  ];
+
+  return (
+    <section className="visual-panel">
+      <div className="section-heading">
+        <h2>How FamilyOS Thinks</h2>
+        <p>A layered model that turns family context into clear next actions.</p>
+      </div>
+      <div className="layer-map">
+        {layers.map(({ title, label, route, icon: Icon, items }) => (
+          <button className="layer-card" key={label} onClick={() => onNavigate(route)}>
+            <span>{title}</span>
+            <div>
+              <Icon size={22} />
+              <strong>{label}</strong>
+            </div>
+            <p>{items.join(" · ")}</p>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FamilyStatusVisual() {
+  const statuses = [
+    ["Education", "Needs Review", "64%"],
+    ["Housing", "On Track", "86%"],
+    ["Subscriptions", "Action", "2 trials"],
+    ["Caregiving", "Action", "+18%"],
+    ["Protection", "Review", "72%"]
+  ];
+
+  return (
+    <section className="status-visual-panel">
+      <div className="status-orbit" aria-label="Family status visual">
+        <div className="orbit-core">
+          <UsersRound size={24} />
+          <strong>Chen Family</strong>
+          <span>Current status</span>
+        </div>
+        {statuses.map(([label, status], index) => (
+          <i key={label} className={`orbit-dot dot-${index + 1}`}>
+            <span>{label}</span>
+            <small>{status}</small>
+          </i>
+        ))}
+      </div>
+      <div className="status-legend-grid">
+        {statuses.map(([label, status, metric]) => (
+          <article key={label}>
+            <span>{label}</span>
+            <strong>{metric}</strong>
+            <StatusChip status={status === "Action" ? "Action Recommended" : status} />
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function GoalCapabilityBridge() {
+  const bridgeSteps: Array<[string, string, LucideIcon]> = [
+    ["Cash Flow", "$3,860 available", CircleDollarSign],
+    ["Goal Capacity", "Moderate readiness", Gauge],
+    ["Product Mix", "GIC + fund pathway", PiggyBank],
+    ["Advisor Review", "Suitability check", UsersRound]
+  ];
+
+  return (
+    <section className="visual-panel">
+      <div className="capability-bridge">
+        {bridgeSteps.map(([title, detail, VisualIcon], index) => {
+          return (
+            <article key={title}>
+              <div className="bridge-icon">
+                <VisualIcon size={20} />
+              </div>
+              <span>Step {index + 1}</span>
+              <strong>{title}</strong>
+              <p>{detail}</p>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function AIProductRoutingMap() {
+  return (
+    <section className="visual-panel">
+      <div className="section-heading">
+        <h2>From Life Event to CIBC Pathway</h2>
+        <p>AI Coach stays educational: it detects eligibility moments and routes to tools, products, or advisors.</p>
+      </div>
+      <div className="routing-map">
+        {[
+          ["Child turns 18", "FHSA education", "Student banking", "Advisor"],
+          ["New baby", "RESP education", "Contribution plan", "Advisor"],
+          ["First job", "TFSA education", "Budget coaching", "Payroll setup"],
+          ["Retirement age", "RRSP/RRIF education", "Income planning", "Advisor"],
+          ["Home purchase", "Mortgage", "Insurance review", "Calculator"]
+        ].map(([trigger, path, action, destination]) => (
+          <article key={trigger}>
+            <span>{trigger}</span>
+            <strong>{path}</strong>
+            <p>{action}</p>
+            <small>{destination}</small>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 

@@ -991,6 +991,287 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.visual-panel,
+.status-visual-panel {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(45, 20, 29, 0.045);
+}
+
+.layer-map {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.layer-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(122, 0, 38, 0.12);
+  border-radius: 18px;
+  padding: 16px;
+  color: var(--ink);
+  background:
+    linear-gradient(180deg, #fff, #fbf8f9);
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(45, 20, 29, 0.035);
+}
+
+.layer-card:hover {
+  border-color: rgba(122, 0, 38, 0.28);
+  transform: translateY(-1px);
+}
+
+.layer-card > span,
+.capability-bridge span,
+.routing-map span {
+  color: var(--maroon);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.layer-card div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.layer-card svg {
+  color: var(--maroon);
+}
+
+.layer-card strong,
+.capability-bridge strong,
+.routing-map strong {
+  display: block;
+  color: var(--ink);
+  font-size: 17px;
+}
+
+.layer-card p,
+.capability-bridge p,
+.routing-map p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.status-visual-panel {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  align-items: center;
+  gap: 22px;
+}
+
+.status-orbit {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  margin: 0 auto;
+  background:
+    radial-gradient(circle at center, #fff 0 35%, transparent 36%),
+    conic-gradient(from 30deg, rgba(142, 11, 46, 0.16), rgba(188, 155, 82, 0.22), rgba(142, 11, 46, 0.08), rgba(142, 11, 46, 0.16));
+  box-shadow: inset 0 0 0 1px rgba(122, 0, 38, 0.08);
+}
+
+.orbit-core {
+  position: absolute;
+  inset: 92px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(122, 0, 38, 0.16);
+  border-radius: 50%;
+  color: var(--maroon);
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 14px 32px rgba(45, 20, 29, 0.09);
+}
+
+.orbit-core strong,
+.orbit-core span {
+  display: block;
+}
+
+.orbit-core span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.orbit-dot {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 88px;
+  min-height: 58px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 8px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 10px 24px rgba(45, 20, 29, 0.08);
+  font-style: normal;
+}
+
+.orbit-dot span,
+.orbit-dot small {
+  display: block;
+}
+
+.orbit-dot span {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.orbit-dot small {
+  color: var(--maroon);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.dot-1 {
+  top: 12px;
+  left: 106px;
+}
+
+.dot-2 {
+  top: 90px;
+  right: -8px;
+}
+
+.dot-3 {
+  right: 32px;
+  bottom: 20px;
+}
+
+.dot-4 {
+  bottom: 20px;
+  left: 32px;
+}
+
+.dot-5 {
+  top: 90px;
+  left: -8px;
+}
+
+.status-legend-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.status-legend-grid article {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 13px;
+  background: var(--panel-2);
+}
+
+.status-legend-grid span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.status-legend-grid strong {
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.capability-bridge {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: linear-gradient(90deg, rgba(142, 11, 46, 0.06), rgba(188, 155, 82, 0.08));
+}
+
+.capability-bridge article {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  min-height: 150px;
+  border-right: 1px solid var(--line);
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.capability-bridge article:last-child {
+  border-right: 0;
+}
+
+.capability-bridge article:not(:last-child)::after {
+  position: absolute;
+  top: 50%;
+  right: -9px;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  background: #fff;
+  transform: translateY(-50%) rotate(45deg);
+  content: "";
+}
+
+.bridge-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  color: #fff;
+  background: var(--maroon);
+}
+
+.routing-map {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.routing-map article {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 15px;
+  background:
+    linear-gradient(180deg, #fff, #fbf8f9);
+}
+
+.routing-map article::before {
+  display: block;
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--maroon), var(--gold));
+  content: "";
+}
+
+.routing-map small {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: var(--maroon);
+  background: #fff4f6;
+  font-size: 11px;
+  font-weight: 900;
+}
+
 .preview-stat-list {
   display: grid;
   gap: 9px;
@@ -2527,6 +2808,8 @@ button {
   }
 
   .opportunity-grid,
+  .layer-map,
+  .routing-map,
   .module-preview-grid,
   .module-preview-grid.compact-preview,
   .admin-summary-grid,
@@ -2535,6 +2818,14 @@ button {
   .workflow-rail,
   .goal-evaluator-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .status-visual-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .status-legend-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .readiness-card,
@@ -2579,6 +2870,8 @@ button {
   .action-card-grid,
   .scenario-form,
   .opportunity-grid,
+  .layer-map,
+  .routing-map,
   .member-detail-grid,
   .eligibility-grid,
   .admin-summary-grid,
@@ -2587,6 +2880,26 @@ button {
   .workflow-rail,
   .goal-evaluator-grid {
     grid-template-columns: 1fr;
+  }
+
+  .capability-bridge {
+    grid-template-columns: 1fr;
+  }
+
+  .capability-bridge article {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .capability-bridge article:last-child {
+    border-bottom: 0;
+  }
+
+  .capability-bridge article:not(:last-child)::after {
+    top: auto;
+    right: 50%;
+    bottom: -9px;
+    transform: translateX(50%) rotate(135deg);
   }
 
   .app-shell {
@@ -2672,6 +2985,8 @@ button {
   .module-grid,
   .subscription-overview,
   .opportunity-grid,
+  .layer-map,
+  .routing-map,
   .module-preview-grid,
   .module-preview-grid.compact-preview,
   .planning-card-grid,
@@ -2686,6 +3001,43 @@ button {
   .cash-metrics,
   .readiness-matrix,
   .watch-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .status-orbit {
+    width: 260px;
+    height: 260px;
+  }
+
+  .orbit-core {
+    inset: 78px;
+  }
+
+  .orbit-dot {
+    width: 76px;
+  }
+
+  .dot-1 {
+    left: 92px;
+  }
+
+  .dot-2 {
+    top: 76px;
+  }
+
+  .dot-3 {
+    right: 24px;
+  }
+
+  .dot-4 {
+    left: 24px;
+  }
+
+  .dot-5 {
+    top: 76px;
+  }
+
+  .status-legend-grid {
     grid-template-columns: 1fr;
   }
 
