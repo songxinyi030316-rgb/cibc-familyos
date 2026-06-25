@@ -3361,6 +3361,33 @@ function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
   const selectedStage = lifeStageKnowledgeBase[selectedStageIndex];
   const activeMember = memberRoadmaps.find((member) => member.member === selectedMember) ?? memberRoadmaps[0];
   const visibleOpportunities = selectedStage.opportunities.slice(0, revealedCount);
+  const priorityOpportunities = visibleOpportunities.slice(0, 3);
+  const hiddenOpportunityCount = Math.max(0, visibleOpportunities.length - priorityOpportunities.length);
+  const stagePhases = [
+    "Foundation",
+    "Foundation",
+    "School",
+    "Money skills",
+    "Teen income",
+    "University",
+    "Ownership",
+    "Independence",
+    "Family",
+    "Home",
+    "Care",
+    "Retirement",
+    "Legacy"
+  ];
+  const selectedStageAge = selectedStage.stage.includes(":") ? selectedStage.stage.split(":")[0] : "Family stage";
+  const selectedStageName = selectedStage.stage.includes(":") ? selectedStage.stage.split(":").slice(1).join(":").trim() : selectedStage.stage;
+  const previousStageIndex = Math.max(0, selectedStageIndex - 1);
+  const nextStageIndex = Math.min(lifeStageKnowledgeBase.length - 1, selectedStageIndex + 1);
+  const focusedStages = [
+    { label: selectedStageIndex === 0 ? "Start" : "Before", index: previousStageIndex },
+    { label: "Selected", index: selectedStageIndex },
+    { label: selectedStageIndex === lifeStageKnowledgeBase.length - 1 ? "End" : "Next", index: nextStageIndex }
+  ].filter((item, itemIndex, items) => items.findIndex((candidate) => candidate.index === item.index) === itemIndex);
+  const stageProgress = (selectedStageIndex / (lifeStageKnowledgeBase.length - 1)) * 100;
 
   const selectStage = (index: number) => {
     setSelectedStageIndex(index);
@@ -3449,18 +3476,56 @@ function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
         <div className="card-title-row">
           <div>
             <span className="section-kicker">Explore Life Stage Opportunities</span>
-            <h2>{selectedStage.stage}</h2>
-            <p>
-              Move across life stages to see what FamilyOS notices, why it matters, and how it routes the family to
-              relevant CIBC support.
-            </p>
+            <h2>{selectedStageName}</h2>
+            <p>Pick a life moment. FamilyOS shows the next CIBC opportunity in plain language.</p>
           </div>
           <button className="primary-button compact" onClick={runLifeStageScan}>
             Run Life Stage Scan
           </button>
         </div>
 
-        <div className="stage-slider-panel">
+        <div className="stage-focus-timeline" aria-label="Life stage timeline">
+          <div className="stage-progress-track">
+            <span style={{ width: `${stageProgress}%` }} />
+            <i style={{ left: `${stageProgress}%` }}>{selectedStageIndex + 1}</i>
+          </div>
+          <div className="stage-neighbor-grid">
+            {focusedStages.map(({ label, index }) => {
+              const stage = lifeStageKnowledgeBase[index];
+              const age = stage.stage.includes(":") ? stage.stage.split(":")[0] : "Adult";
+              const name = stage.stage.includes(":") ? stage.stage.split(":").slice(1).join(":").trim() : stage.stage;
+              return (
+                <button
+                  key={`${label}-${stage.stage}`}
+                  className={index === selectedStageIndex ? "active" : ""}
+                  onClick={() => selectStage(index)}
+                >
+                  <span>{label}</span>
+                  <strong>{age}</strong>
+                  <small>{name}</small>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="stage-jump-row">
+          <label htmlFor="stage-select">Jump to life stage</label>
+          <select id="stage-select" value={selectedStageIndex} onChange={(event) => selectStage(Number(event.target.value))}>
+            {lifeStageKnowledgeBase.map((stage, index) => {
+              const age = stage.stage.includes(":") ? stage.stage.split(":")[0] : "Adult";
+              const name = stage.stage.includes(":") ? stage.stage.split(":").slice(1).join(":").trim() : stage.stage;
+              return (
+                <option key={stage.stage} value={index}>
+                  {age} · {name}
+                </option>
+              );
+            })}
+          </select>
+          <span>{stagePhases[selectedStageIndex]}</span>
+        </div>
+
+        <div className="stage-slider-panel compact">
           <input
             aria-label="Life stage selector"
             type="range"
@@ -3470,17 +3535,6 @@ function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
             onChange={(event) => selectStage(Number(event.target.value))}
             onInput={(event) => selectStage(Number(event.currentTarget.value))}
           />
-          <div className="stage-chip-row">
-            {lifeStageKnowledgeBase.map((stage, index) => (
-              <button
-                key={stage.stage}
-                className={index === selectedStageIndex ? "active" : ""}
-                onClick={() => selectStage(index)}
-              >
-                {stage.stage.split(":")[0]}
-              </button>
-            ))}
-          </div>
         </div>
 
         <div className="scan-status">
@@ -3488,44 +3542,56 @@ function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
             <Sparkles size={18} />
             <strong>{scanStatus}</strong>
           </div>
-          <span>{visibleOpportunities.length} of {selectedStage.opportunities.length} opportunities visible</span>
+          <span>{selectedStageAge} · {priorityOpportunities.length} priority actions</span>
         </div>
 
-        <div className="stage-detail-grid">
-          <article className="stage-context-card">
-            <span>Who it applies to</span>
-            <strong>{selectedStage.appliesTo}</strong>
-            <p>{selectedStage.why}</p>
-            <div className="stage-meta-grid">
-              <div>
-                <small>Trigger</small>
-                <b>{selectedStage.trigger}</b>
-              </div>
-              <div>
-                <small>Advisor recommended</small>
-                <b>{selectedStage.advisor ? "Yes" : "No"}</b>
-              </div>
-            </div>
-          </article>
+        <div className="stage-spotlight-card">
+          <div>
+            <span>{selectedStageAge}</span>
+            <h3>{selectedStageName}</h3>
+            <p>{selectedStage.trigger}</p>
+          </div>
+          <div className="stage-quick-facts">
+            <article>
+              <small>For</small>
+              <strong>{selectedStage.appliesTo}</strong>
+            </article>
+            <article>
+              <small>Main risk</small>
+              <strong>{selectedStage.risks[0]}</strong>
+            </article>
+            <article>
+              <small>CIBC path</small>
+              <strong>{selectedStage.products.slice(0, 2).join(" + ")}</strong>
+            </article>
+            <article>
+              <small>Advisor</small>
+              <strong>{selectedStage.advisor ? "Recommended" : "Optional"}</strong>
+            </article>
+          </div>
+        </div>
 
-          <article className="stage-context-card">
-            <span>Key risks</span>
-            <div className="risk-chip-row">
-              {selectedStage.risks.map((risk) => (
+        <div className="stage-support-strip">
+          <div>
+            <span>Watch for</span>
+            <div>
+              {selectedStage.risks.slice(0, 3).map((risk) => (
                 <small key={risk}>{risk}</small>
               ))}
             </div>
-            <span>Relevant CIBC support</span>
-            <div className="support-chip-row">
-              {selectedStage.products.map((product) => (
+          </div>
+          <div>
+            <span>Connects to</span>
+            <div>
+              {selectedStage.products.slice(0, 4).map((product) => (
                 <small key={product}>{product}</small>
               ))}
             </div>
-          </article>
+          </div>
         </div>
 
-        <div className="opportunity-engine-grid">
-          {visibleOpportunities.map((opportunity, index) => (
+        <div className="opportunity-engine-grid simplified">
+          {priorityOpportunities.map((opportunity, index) => (
             <button
               className={`engine-opportunity-card ${scanning ? "revealing" : ""}`}
               key={opportunity.title}
@@ -3534,13 +3600,20 @@ function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
             >
               <span>{opportunity.type}</span>
               <h3>{opportunity.title}</h3>
-              <p>{opportunity.why}</p>
+              <p>{opportunity.action}</p>
               <div>
                 <small>{opportunity.confidence} confidence</small>
-                <small>{opportunity.support}</small>
+                <small>View details</small>
               </div>
             </button>
           ))}
+          {hiddenOpportunityCount > 0 && (
+            <article className="more-opportunities-card">
+              <span>More available</span>
+              <strong>{hiddenOpportunityCount} additional actions</strong>
+              <p>FamilyOS keeps the extra options in the background so this view stays focused.</p>
+            </article>
+          )}
         </div>
       </section>
 

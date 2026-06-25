@@ -1600,19 +1600,241 @@ button {
 
 .life-stage-explorer {
   display: grid;
-  gap: 18px;
+  gap: 20px;
   border: 1px solid rgba(122, 0, 38, 0.13);
   border-radius: 24px;
-  padding: 20px;
+  padding: 24px;
   background:
     linear-gradient(135deg, #fff7f9, #fff),
     #fff;
   box-shadow: 0 16px 38px rgba(45, 20, 29, 0.06);
 }
 
+.life-stage-explorer .card-title-row h2 {
+  font-size: 30px;
+}
+
+.life-stage-explorer .card-title-row p {
+  max-width: 720px;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.stage-focus-timeline {
+  display: grid;
+  gap: 18px;
+}
+
+.stage-progress-track {
+  position: relative;
+  height: 16px;
+  margin: 12px 18px 4px;
+  border-radius: 999px;
+  background: #ece4e6;
+}
+
+.stage-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--maroon), #c99532);
+}
+
+.stage-progress-track i {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 5px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--maroon);
+  box-shadow: 0 12px 24px rgba(122, 0, 38, 0.2);
+  font-style: normal;
+  font-size: 16px;
+  font-weight: 950;
+  transform: translate(-50%, -50%);
+}
+
+.stage-neighbor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.stage-neighbor-grid button {
+  display: grid;
+  gap: 8px;
+  min-height: 150px;
+  border: 1px solid rgba(122, 0, 38, 0.12);
+  border-radius: 22px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.8);
+  text-align: left;
+}
+
+.stage-neighbor-grid button:hover {
+  border-color: rgba(122, 0, 38, 0.28);
+  transform: translateY(-2px);
+}
+
+.stage-neighbor-grid button.active {
+  border-color: rgba(122, 0, 38, 0.36);
+  background: #fff;
+  box-shadow: 0 16px 34px rgba(122, 0, 38, 0.13);
+}
+
+.stage-neighbor-grid span {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: var(--maroon);
+  background: #fff0f4;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.stage-neighbor-grid strong {
+  color: var(--ink);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.stage-neighbor-grid small {
+  color: var(--muted);
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.stage-jump-row {
+  display: grid;
+  grid-template-columns: auto minmax(260px, 420px) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid rgba(122, 0, 38, 0.1);
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.stage-jump-row label,
+.stage-jump-row span {
+  color: var(--maroon);
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.stage-jump-row select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 12px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.stage-timeline-rail {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(13, minmax(118px, 1fr));
+  gap: 10px;
+  overflow-x: auto;
+  padding: 8px 2px 14px;
+}
+
+.stage-timeline-rail::before {
+  content: "";
+  position: absolute;
+  top: 31px;
+  right: 42px;
+  left: 42px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(122, 0, 38, 0.2), rgba(197, 149, 50, 0.5));
+}
+
+.stage-timeline-rail button {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-height: 128px;
+  border: 1px solid rgba(122, 0, 38, 0.12);
+  border-radius: 18px;
+  padding: 12px 10px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.88);
+  text-align: center;
+}
+
+.stage-timeline-rail button:hover {
+  border-color: rgba(122, 0, 38, 0.28);
+  transform: translateY(-2px);
+}
+
+.stage-timeline-rail button.active {
+  color: var(--ink);
+  border-color: rgba(122, 0, 38, 0.36);
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(122, 0, 38, 0.12);
+}
+
+.stage-timeline-rail i {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  background: #b39d9f;
+  box-shadow: 0 8px 18px rgba(45, 20, 29, 0.12);
+  font-style: normal;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.stage-timeline-rail button.active i {
+  background: var(--maroon);
+}
+
+.stage-timeline-rail span {
+  color: var(--maroon);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.stage-timeline-rail strong {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.15;
+}
+
+.stage-timeline-rail small {
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #7b5b20;
+  background: #fff5dc;
+  font-size: 11px;
+  font-weight: 900;
+}
+
 .stage-slider-panel {
   display: grid;
   gap: 12px;
+}
+
+.stage-slider-panel.compact {
+  margin-top: -8px;
 }
 
 .stage-slider-panel input[type="range"] {
@@ -1653,7 +1875,7 @@ button {
   gap: 12px;
   border: 1px solid rgba(122, 0, 38, 0.1);
   border-radius: 18px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   background: rgba(255, 255, 255, 0.78);
 }
 
@@ -1666,8 +1888,111 @@ button {
 
 .scan-status span {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 850;
+}
+
+.stage-spotlight-card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(440px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  border: 1px solid rgba(122, 0, 38, 0.13);
+  border-radius: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff, #fff8fa);
+}
+
+.stage-spotlight-card > div:first-child {
+  display: grid;
+  align-content: center;
+  gap: 9px;
+}
+
+.stage-spotlight-card > div:first-child span {
+  color: var(--maroon);
+  font-size: 14px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.stage-spotlight-card h3 {
+  margin: 0;
+  font-size: 31px;
+  line-height: 1.08;
+}
+
+.stage-spotlight-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 17px;
+  font-weight: 760;
+  line-height: 1.45;
+}
+
+.stage-quick-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stage-quick-facts article {
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 14px;
+  background: #fff;
+}
+
+.stage-quick-facts small {
+  color: var(--maroon);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.stage-quick-facts strong {
+  display: block;
+  margin-top: 7px;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.28;
+}
+
+.stage-support-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stage-support-strip > div {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.stage-support-strip span {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--maroon);
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.stage-support-strip div div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stage-support-strip small {
+  border-radius: 999px;
+  padding: 8px 11px;
+  color: var(--ink);
+  background: #f7f3f4;
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .stage-detail-grid {
@@ -1759,21 +2084,29 @@ button {
 .opportunity-engine-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
+}
+
+.opportunity-engine-grid.simplified {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .engine-opportunity-card {
   display: grid;
   align-content: start;
-  gap: 10px;
-  min-height: 230px;
+  gap: 12px;
+  min-height: 190px;
   border: 1px solid var(--line);
-  border-radius: 19px;
-  padding: 15px;
+  border-radius: 20px;
+  padding: 18px;
   color: var(--ink);
   background: #fff;
   text-align: left;
   box-shadow: 0 10px 24px rgba(45, 20, 29, 0.04);
+}
+
+.opportunity-engine-grid.simplified .engine-opportunity-card {
+  min-height: 205px;
 }
 
 .engine-opportunity-card:hover {
@@ -1789,10 +2122,10 @@ button {
 .engine-opportunity-card > span {
   width: fit-content;
   border-radius: 999px;
-  padding: 6px 9px;
+  padding: 7px 10px;
   color: var(--maroon);
   background: #fff0f4;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -1803,15 +2136,15 @@ button {
 }
 
 .engine-opportunity-card h3 {
-  font-size: 17px;
-  line-height: 1.25;
+  font-size: 20px;
+  line-height: 1.18;
 }
 
 .engine-opportunity-card p {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
-  line-height: 1.45;
+  line-height: 1.38;
 }
 
 .engine-opportunity-card div {
@@ -1822,9 +2155,41 @@ button {
 
 .engine-opportunity-card small {
   color: #7b5b20;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   line-height: 1.35;
+}
+
+.more-opportunities-card {
+  display: grid;
+  align-content: center;
+  gap: 9px;
+  min-height: 205px;
+  border: 1px dashed rgba(122, 0, 38, 0.22);
+  border-radius: 20px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.more-opportunities-card span {
+  color: var(--maroon);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.more-opportunities-card strong {
+  color: var(--ink);
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+.more-opportunities-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 760;
+  line-height: 1.4;
 }
 
 @keyframes opportunityReveal {
@@ -4372,6 +4737,7 @@ button {
   .dashboard-two-column,
   .detector-intro,
   .engine-focus-card,
+  .stage-spotlight-card,
   .stage-detail-grid,
   .member-roadmap-layout,
   .roadmap-detail-card,
@@ -4390,6 +4756,7 @@ button {
   .top-recommendation-grid,
   .dashboard-timeline-preview,
   .opportunity-engine-grid,
+  .stage-neighbor-grid,
   .modal-grid,
   .modal-support-card,
   .route-chip-grid,
@@ -4464,6 +4831,9 @@ button {
   .scenario-form,
   .opportunity-grid,
   .detector-flow,
+  .stage-neighbor-grid,
+  .stage-jump-row,
+  .stage-support-strip,
   .priority-moment-grid,
   .engine-signal-grid,
   .milestone-card-grid,
@@ -4493,6 +4863,10 @@ button {
   .product-pathway-grid,
   .workflow-rail,
   .goal-evaluator-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stage-spotlight-card {
     grid-template-columns: 1fr;
   }
 
@@ -4636,6 +5010,9 @@ button {
   .subscription-overview,
   .opportunity-grid,
   .detector-flow,
+  .stage-neighbor-grid,
+  .stage-jump-row,
+  .stage-support-strip,
   .priority-moment-grid,
   .engine-signal-grid,
   .milestone-card-grid,
