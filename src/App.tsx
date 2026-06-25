@@ -41,6 +41,9 @@ type Route =
   | "landing"
   | "auth"
   | "onboarding"
+  | "dashboard"
+  | "planning"
+  | "ai"
   | "overview"
   | "family"
   | "accounts"
@@ -57,6 +60,18 @@ type Route =
   | "permissions"
   | "insights"
   | "settings";
+
+type FamilySubRoute = "members" | "accounts" | "permissions" | "documents";
+
+type PlanningSubRoute =
+  | "overview"
+  | "education"
+  | "housing"
+  | "cashflow"
+  | "subscriptions"
+  | "caregiving"
+  | "protection"
+  | "legacy";
 
 type FamilyMember = {
   name: string;
@@ -111,20 +126,11 @@ const familyMembers: FamilyMember[] = [
 ];
 
 const navItems: { route: Route; label: string; icon: LucideIcon }[] = [
-  { route: "family", label: "Family Dashboard", icon: UsersRound },
-  { route: "accounts", label: "Accounts", icon: WalletCards },
-  { route: "goals", label: "Goals", icon: Gauge },
-  { route: "education", label: "Education Planner", icon: GraduationCap },
-  { route: "housing", label: "Housing Hub", icon: Home },
-  { route: "cashflow", label: "Cash Flow", icon: CircleDollarSign },
-  { route: "subscriptions", label: "Subscription Control", icon: ReceiptText },
-  { route: "caregiving", label: "Caregiving Mode", icon: HeartPulse },
-  { route: "protection", label: "Insurance & Protection", icon: ShieldCheck },
+  { route: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { route: "family", label: "Family", icon: UsersRound },
+  { route: "planning", label: "Planning", icon: Gauge },
   { route: "investments", label: "Investments", icon: PiggyBank },
-  { route: "legacy", label: "Wealth & Legacy", icon: ScrollText },
-  { route: "documents", label: "Documents", icon: FileText },
-  { route: "permissions", label: "Permissions", icon: LockKeyhole },
-  { route: "insights", label: "AI Insights", icon: Sparkles },
+  { route: "ai", label: "AI Coach", icon: Sparkles },
   { route: "settings", label: "Settings", icon: Settings }
 ];
 
@@ -383,8 +389,8 @@ const tasks = [
 
 const featureCards: { title: string; text: string; icon: LucideIcon }[] = [
   {
-    title: "Family Financial Dashboard",
-    text: "A household-level view of balances, goals, roles, and upcoming decisions.",
+    title: "Family Opportunity Dashboard",
+    text: "A household-level view of what your family may need to do next.",
     icon: LayoutDashboard
   },
   {
@@ -408,8 +414,8 @@ const featureCards: { title: string; text: string; icon: LucideIcon }[] = [
     icon: ScrollText
   },
   {
-    title: "AI Family Insights",
-    text: "Transparent recommendations that distinguish verified data, optional shared ranges, and context to add later.",
+    title: "AI Coach",
+    text: "Opportunity detection that explains data sources, confidence, and recommended next actions.",
     icon: Sparkles
   }
 ];
@@ -562,7 +568,7 @@ const formatCurrency = (value: number) =>
   }).format(value);
 
 export default function App() {
-  const [route, setRoute] = useAppRoute();
+  const [route, setRoute, familySubRoute, setFamilySubRoute, planningSubRoute, setPlanningSubRoute] = useAppRoute();
   const [authTab, setAuthTab] = useState<"signin" | "create">("signin");
 
   if (route === "landing") {
@@ -590,14 +596,59 @@ export default function App() {
 
   return (
     <DashboardShell route={route} onNavigate={setRoute}>
-      {renderRoute(route, setRoute)}
+      {renderRoute(route, setRoute, familySubRoute, setFamilySubRoute, planningSubRoute, setPlanningSubRoute)}
     </DashboardShell>
   );
 }
 
-function useAppRoute(): [Route, (route: Route) => void] {
+function useAppRoute(): [
+  Route,
+  (route: Route) => void,
+  FamilySubRoute,
+  (subRoute: FamilySubRoute) => void,
+  PlanningSubRoute,
+  (subRoute: PlanningSubRoute) => void
+] {
   const [route, setRoute] = useState<Route>("landing");
-  return [route, setRoute];
+  const [familySubRoute, setFamilySubRoute] = useState<FamilySubRoute>("members");
+  const [planningSubRoute, setPlanningSubRoute] = useState<PlanningSubRoute>("overview");
+
+  const navigate = (nextRoute: Route) => {
+    const planningMap: Partial<Record<Route, PlanningSubRoute>> = {
+      overview: "overview",
+      goals: "overview",
+      education: "education",
+      housing: "housing",
+      cashflow: "cashflow",
+      subscriptions: "subscriptions",
+      caregiving: "caregiving",
+      protection: "protection",
+      legacy: "legacy"
+    };
+    const familyMap: Partial<Record<Route, FamilySubRoute>> = {
+      accounts: "accounts",
+      documents: "documents",
+      permissions: "permissions"
+    };
+
+    if (nextRoute in planningMap) {
+      setPlanningSubRoute(planningMap[nextRoute] ?? "overview");
+      setRoute("planning");
+      return;
+    }
+    if (nextRoute in familyMap) {
+      setFamilySubRoute(familyMap[nextRoute] ?? "members");
+      setRoute("family");
+      return;
+    }
+    if (nextRoute === "insights") {
+      setRoute("ai");
+      return;
+    }
+    setRoute(nextRoute);
+  };
+
+  return [route, navigate, familySubRoute, setFamilySubRoute, planningSubRoute, setPlanningSubRoute];
 }
 
 function LandingPage({ onSignIn, onCreate }: { onSignIn: () => void; onCreate: () => void }) {
@@ -655,7 +706,7 @@ function AuthPage({ initialTab, onNavigate }: { initialTab: "signin" | "create";
   const [tab, setTab] = useState<"signin" | "create">(initialTab);
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    onNavigate(tab === "signin" ? "family" : "onboarding");
+    onNavigate(tab === "signin" ? "dashboard" : "onboarding");
   };
 
   return (
@@ -749,8 +800,8 @@ function OnboardingPage({ onNavigate }: { onNavigate: (route: Route) => void }) 
             Continue
           </button>
         ) : (
-          <button className="primary-button" onClick={() => onNavigate("family")}>
-            Enter Family Dashboard
+          <button className="primary-button" onClick={() => onNavigate("dashboard")}>
+            Enter Dashboard
           </button>
         )}
       </div>
@@ -1018,54 +1069,87 @@ function DashboardShell({
   );
 }
 
-function renderRoute(route: Route, onNavigate: (route: Route) => void) {
+function renderRoute(
+  route: Route,
+  onNavigate: (route: Route) => void,
+  familySubRoute: FamilySubRoute,
+  setFamilySubRoute: (subRoute: FamilySubRoute) => void,
+  planningSubRoute: PlanningSubRoute,
+  setPlanningSubRoute: (subRoute: PlanningSubRoute) => void
+) {
   switch (route) {
-    case "family":
+    case "dashboard":
     case "overview":
-      return <FamilyDashboard onNavigate={onNavigate} />;
-    case "education":
-      return <EducationPlanner />;
-    case "housing":
-      return <HousingHub />;
-    case "cashflow":
-      return <CashFlow />;
-    case "subscriptions":
-      return <SubscriptionControl />;
-    case "caregiving":
-      return <CaregivingMode />;
-    case "protection":
-      return <Protection />;
+      return <DashboardPage onNavigate={onNavigate} />;
+    case "family":
+      return <FamilyAdminPage activeTab={familySubRoute} onTabChange={setFamilySubRoute} />;
+    case "planning":
+      return <PlanningPage activeTab={planningSubRoute} onTabChange={setPlanningSubRoute} onNavigate={onNavigate} />;
     case "investments":
       return <Investments />;
-    case "legacy":
-      return <LegacyMap />;
-    case "documents":
-      return <DocumentsVault />;
-    case "permissions":
-      return <PermissionsPage />;
+    case "ai":
     case "insights":
-      return <AIInsightsPage onNavigate={onNavigate} />;
+      return <AICoachPage onNavigate={onNavigate} />;
     case "settings":
       return <SettingsPage />;
-    case "accounts":
-      return <AccountsPage />;
-    case "goals":
-      return <GoalsPage />;
     default:
-      return <FamilyDashboard onNavigate={onNavigate} />;
+      return <DashboardPage onNavigate={onNavigate} />;
   }
 }
 
-function FamilyDashboard({ onNavigate }: { onNavigate: (route: Route) => void }) {
+function DashboardPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  const opportunities = [
+    {
+      category: "Education",
+      title: "Emma's RESP path may fall short by $7,800",
+      why: "First-year costs are estimated at $28,500 and the current RESP plan may need a contribution adjustment.",
+      action: "Compare RESP support, monthly transfer, and student banking options.",
+      cta: "Review Education Plan",
+      route: "education" as Route
+    },
+    {
+      category: "Housing",
+      title: "Mortgage renewal in 14 months",
+      why: "Starting early gives the family time to review rates, HELOC utilization, and debt repayment scenarios.",
+      action: "Prepare renewal documents and review rate scenarios.",
+      cta: "Open Housing Plan",
+      route: "housing" as Route
+    },
+    {
+      category: "Subscriptions",
+      title: "Two free trials convert this week",
+      why: "Meal Kit Trial and Streaming Sports Trial could add $114.98/month if no action is taken.",
+      action: "Cancel, cap, or create merchant-specific trial controls.",
+      cta: "Manage Subscriptions",
+      route: "subscriptions" as Route
+    },
+    {
+      category: "Caregiving",
+      title: "Grace's care spending increased 18%",
+      why: "Care-related spending has risen quarter-over-quarter and one unusual transaction is pending review.",
+      action: "Review the flagged transaction and adjust care alerts.",
+      cta: "Review Caregiving",
+      route: "caregiving" as Route
+    },
+    {
+      category: "Legacy",
+      title: "Legacy documents are missing or outdated",
+      why: "Grace's Power of Attorney is not uploaded and estate documents have not been updated in 3 years.",
+      action: "Upload key documents and refresh beneficiary records.",
+      cta: "Upload Documents",
+      route: "documents" as Route
+    }
+  ];
+
   return (
     <main className="family-dashboard">
       <section className="priority-banner">
         <div>
-          <span>FamilyOS priorities</span>
-          <h2>Your family has 3 priorities this month</h2>
-          <p>Education planning, caregiving support, and subscription review may need attention.</p>
-          <button className="primary-button compact" onClick={() => onNavigate("insights")}>
-            Review priorities
+          <span>Family Opportunity AI</span>
+          <h2>What should the Chen family do next?</h2>
+          <p>Families do not need another dashboard. They need to know what to do next.</p>
+          <button className="primary-button compact" onClick={() => onNavigate("ai")}>
+            View AI timeline
           </button>
         </div>
         <div className="priority-visual">
@@ -1073,75 +1157,18 @@ function FamilyDashboard({ onNavigate }: { onNavigate: (route: Route) => void })
         </div>
       </section>
 
-      <section className="dashboard-two-column">
-        <div className="card calm-card">
-          <div className="card-title-row">
-            <div>
-              <h2>Family Readiness Snapshot</h2>
-              <p>A simple view of what is on track and what needs attention.</p>
-            </div>
-            <button className="secondary-button compact" onClick={() => onNavigate("goals")}>
-              View goals
-            </button>
-          </div>
-          <ReadinessMatrix compact />
-          <div className="gentle-progress limited">
-            {planningProgress
-              .filter(([label]) => label === "Education planning" || label === "Caregiving support")
-              .map(([label, value]) => (
-                <ProgressBar key={label} label={String(label)} value={Number(value)} />
-              ))}
-          </div>
-        </div>
-
-        <div className="card calm-card">
-          <div className="card-title-row">
-            <h2>AI Family Insights</h2>
-            <button className="secondary-button compact" onClick={() => onNavigate("insights")}>
-              View all
-            </button>
-          </div>
-          <div className="insight-stack focused">
-            {[aiInsights[0], aiInsights.find((insight) => insight.category === "Subscriptions")!].map((insight) => (
-              <InsightMini key={insight.title} insight={insight} />
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="recommended-actions">
         <div className="section-heading">
-          <h2>Top Recommended Actions</h2>
-          <p>Start with the three items most likely to affect the Chen Family this month.</p>
+          <h2>Today's Family Opportunities</h2>
+          <p>Start with the highest-impact household opportunities detected from goals, permissions, and CIBC data.</p>
         </div>
-        <div className="action-card-grid">
-          {[
-            {
-              category: "Education",
-              title: "Review Emma's university funding gap",
-              why: "Projected first-year costs may exceed the current RESP path by $7,800.",
-              cta: "Open Education Planner",
-              route: "education" as Route
-            },
-            {
-              category: "Caregiving",
-              title: "Confirm Grace's unusual transaction",
-              why: "A $640 transaction was flagged under permissioned caregiving alerts.",
-              cta: "Open Caregiving Mode",
-              route: "caregiving" as Route
-            },
-            {
-              category: "Subscriptions",
-              title: "Review free trials ending this week",
-              why: "Two free trials convert to paid plans within the next 7 days.",
-              cta: "Open Subscription Control",
-              route: "subscriptions" as Route
-            }
-          ].map((item) => (
+        <div className="opportunity-grid">
+          {opportunities.map((item) => (
             <article className="priority-action-card" key={item.title}>
               <span>{item.category}</span>
               <h3>{item.title}</h3>
               <p>{item.why}</p>
+              <small>{item.action}</small>
               <button className="secondary-button compact" onClick={() => onNavigate(item.route)}>
                 {item.cta}
               </button>
@@ -1150,12 +1177,25 @@ function FamilyDashboard({ onNavigate }: { onNavigate: (route: Route) => void })
         </div>
       </section>
 
+      <section className="card calm-card">
+        <div className="card-title-row">
+          <div>
+            <h2>Family Readiness Snapshot</h2>
+            <p>A household-first view of what is on track, what needs review, and what needs action.</p>
+          </div>
+          <button className="secondary-button compact" onClick={() => onNavigate("planning")}>
+            Open planning
+          </button>
+        </div>
+        <ReadinessMatrix />
+      </section>
+
       <section className="module-preview-section">
         <div className="section-heading">
-          <h2>Key Modules Preview</h2>
-          <p>High-level household indicators, with details available in each module.</p>
+          <h2>Household Summary</h2>
+          <p>Only the key context needed to support next-best family actions.</p>
         </div>
-        <div className="module-preview-grid">
+        <div className="module-preview-grid compact-preview">
           <PreviewCard
             title="Estimated Household Picture"
             route="accounts"
@@ -1177,28 +1217,8 @@ function FamilyDashboard({ onNavigate }: { onNavigate: (route: Route) => void })
             ]}
           />
           <PreviewCard
-            title="Family Goals"
-            route="goals"
-            onNavigate={onNavigate}
-            stats={[
-              ["On track", "2 areas"],
-              ["Needs review", "3 areas"],
-              ["Add later", "Legacy docs"]
-            ]}
-          />
-          <PreviewCard
-            title="Subscription Watch"
-            route="subscriptions"
-            onNavigate={onNavigate}
-            stats={[
-              ["Active subscriptions", "8"],
-              ["Trials ending soon", "2"],
-              ["Potential savings", "$96/month"]
-            ]}
-          />
-          <PreviewCard
             title="Upcoming Tasks"
-            route="insights"
+            route="ai"
             onNavigate={onNavigate}
             stats={[
               ["RESP review", "This week"],
@@ -1208,6 +1228,159 @@ function FamilyDashboard({ onNavigate }: { onNavigate: (route: Route) => void })
           />
         </div>
       </section>
+    </main>
+  );
+}
+
+function FamilyAdminPage({
+  activeTab,
+  onTabChange
+}: {
+  activeTab: FamilySubRoute;
+  onTabChange: (subRoute: FamilySubRoute) => void;
+}) {
+  const tabs: { id: FamilySubRoute; label: string; icon: LucideIcon }[] = [
+    { id: "members", label: "Members", icon: UsersRound },
+    { id: "accounts", label: "Accounts & Ownership", icon: WalletCards },
+    { id: "permissions", label: "Permissions & Consent", icon: LockKeyhole },
+    { id: "documents", label: "Documents Vault", icon: FileText }
+  ];
+
+  return (
+    <ModulePage
+      icon={UsersRound}
+      kicker="Family Administration Center"
+      title="Family, ownership, access, and documents"
+      summary="Manage the people, accounts, permissions, and shared documents that make FamilyOS consent-based."
+      insight="FamilyOS does not automatically grant control over another person's account. Access is consent-based, role-based, and revocable."
+    >
+      <InternalTabs tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
+      {activeTab === "members" && <FamilyMembersAdmin />}
+      {activeTab === "accounts" && <AccountsPage compact />}
+      {activeTab === "permissions" && <PermissionsPage compact />}
+      {activeTab === "documents" && <DocumentsVault compact />}
+    </ModulePage>
+  );
+}
+
+function FamilyMembersAdmin() {
+  return (
+    <>
+      <Panel title="Family Members">
+        <div className="family-card-grid">
+          {familyMembers.map((member) => (
+            <article className="family-member-card" key={member.name}>
+              <div className="member-avatar">{member.name.split(" ").map((part) => part[0]).join("")}</div>
+              <div>
+                <strong>{member.name}</strong>
+                <span>{member.relationship}{member.age ? `, age ${member.age}` : ""}</span>
+              </div>
+              <div className="member-detail-grid">
+                <small>Role <strong>{member.role}</strong></small>
+                <small>Access <strong>{member.access}</strong></small>
+                <small>Linked goal <strong>{member.goal}</strong></small>
+              </div>
+            </article>
+          ))}
+        </div>
+      </Panel>
+      <Panel title="Administration Focus">
+        <div className="admin-summary-grid">
+          {[
+            ["Identity", "5 family members with separate roles and ownership"],
+            ["Ownership", "Accounts remain individually owned unless joint access is authorized"],
+            ["Consent", "Every sensitive family view depends on sharing permissions"],
+            ["Documents", "Vault folders connect to education, care, insurance, property, tax, and legacy"]
+          ].map(([title, text]) => (
+            <article key={title}>
+              <strong>{title}</strong>
+              <span>{text}</span>
+            </article>
+          ))}
+        </div>
+      </Panel>
+    </>
+  );
+}
+
+function PlanningPage({
+  activeTab,
+  onTabChange,
+  onNavigate
+}: {
+  activeTab: PlanningSubRoute;
+  onTabChange: (subRoute: PlanningSubRoute) => void;
+  onNavigate: (route: Route) => void;
+}) {
+  const tabs: { id: PlanningSubRoute; label: string; icon: LucideIcon }[] = [
+    { id: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "education", label: "Education", icon: GraduationCap },
+    { id: "housing", label: "Housing", icon: Home },
+    { id: "cashflow", label: "Cash Flow", icon: CircleDollarSign },
+    { id: "subscriptions", label: "Subscriptions", icon: ReceiptText },
+    { id: "caregiving", label: "Caregiving", icon: HeartPulse },
+    { id: "protection", label: "Protection", icon: ShieldCheck },
+    { id: "legacy", label: "Legacy", icon: ScrollText }
+  ];
+
+  return (
+    <main className="planning-shell">
+      <section className="module-hero">
+        <div className="module-hero-copy">
+          <div className="module-icon">
+            <Gauge size={28} />
+          </div>
+          <div>
+            <span>Planning Readiness</span>
+            <h2>Major family responsibilities in one planning workspace</h2>
+            <p>Move from opportunity detection into education, housing, cash flow, subscriptions, caregiving, protection, and legacy action plans.</p>
+          </div>
+        </div>
+      </section>
+      <InternalTabs tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
+      {activeTab === "overview" && <PlanningOverview onNavigate={onNavigate} />}
+      {activeTab === "education" && <EducationPlanner />}
+      {activeTab === "housing" && <HousingHub />}
+      {activeTab === "cashflow" && <CashFlow />}
+      {activeTab === "subscriptions" && <SubscriptionControl />}
+      {activeTab === "caregiving" && <CaregivingMode />}
+      {activeTab === "protection" && <Protection />}
+      {activeTab === "legacy" && <LegacyMap />}
+    </main>
+  );
+}
+
+function PlanningOverview({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  const cards = [
+    ["Education", "Needs Review", "RESP path may fall short by $7,800.", "Open Education Plan", "education"],
+    ["Housing", "On Track", "Mortgage renewal preparation starts in 8 months.", "Open Housing Plan", "housing"],
+    ["Cash Flow", "On Track", "Safe-to-spend for the next 14 days is $1,240.", "Open Cash Flow", "cashflow"],
+    ["Subscriptions", "Action Recommended", "Two trials convert to paid plans this week.", "Manage Subscriptions", "subscriptions"],
+    ["Caregiving", "Action Recommended", "Grace has an unusual transaction and higher care spend.", "Review Caregiving", "caregiving"],
+    ["Protection", "Needs Review", "Beneficiaries and life coverage need review.", "Review Protection", "protection"],
+    ["Legacy", "Missing Info", "Grace's POA and several estate files can be added.", "Open Legacy Plan", "legacy"]
+  ] as const;
+
+  return (
+    <main className="module-page planning-overview">
+      <div className="section-heading">
+        <h2>Planning Overview</h2>
+        <p>Choose the planning area that matches the family opportunity you want to act on.</p>
+      </div>
+      <div className="planning-card-grid">
+        {cards.map(([title, status, text, cta, route]) => (
+          <article className="planning-card" key={title}>
+            <div>
+              <span>{title}</span>
+              <StatusChip status={status} />
+            </div>
+            <p>{text}</p>
+            <button className="secondary-button compact" onClick={() => onNavigate(route)}>
+              {cta}
+            </button>
+          </article>
+        ))}
+      </div>
     </main>
   );
 }
@@ -1909,7 +2082,7 @@ function LegacyMap() {
   );
 }
 
-function DocumentsVault() {
+function DocumentsVault({ compact = false }: { compact?: boolean }) {
   const docs = [
     ["Wills", "2 files", "Verified owner uploaded"],
     ["POA", "1 missing", "Grace missing"],
@@ -1920,6 +2093,19 @@ function DocumentsVault() {
     ["Care invoices", "7 files", "Caregiving Mode"],
     ["Tax documents", "5 files", "Private folder"]
   ];
+  const content = (
+    <>
+      <button className="primary-button compact">
+        <Upload size={17} /> Mock upload document
+      </button>
+      <Panel title="Vault">
+        <DataTable headers={["Category", "Status", "Access note"]} rows={docs} />
+      </Panel>
+    </>
+  );
+
+  if (compact) return content;
+
   return (
     <ModulePage
       icon={FileText}
@@ -1928,26 +2114,15 @@ function DocumentsVault() {
       summary="Organize important files by owner, goal, and permission level."
       insight="Upload Grace's POA to complete the caregiving readiness checklist."
     >
-      <button className="primary-button compact">
-        <Upload size={17} /> Mock upload document
-      </button>
-      <Panel title="Vault">
-        <DataTable headers={["Category", "Status", "Access note"]} rows={docs} />
-      </Panel>
+      {content}
     </ModulePage>
   );
 }
 
-function PermissionsPage() {
+function PermissionsPage({ compact = false }: { compact?: boolean }) {
   const columns = ["View balances", "View transactions", "Pay bills", "Transfer funds", "Manage documents", "Receive alerts", "Emergency access"];
-  return (
-    <ModulePage
-      icon={LockKeyhole}
-      kicker="Permissions"
-      title="Consent-based, role-based access"
-      summary="FamilyOS does not automatically grant control over another person's account. Access is consent-based, role-based, and revocable."
-      insight="Grace can grant or revoke access to care budget visibility at any time."
-    >
+  const content = (
+    <>
       <div className="permission-actions">
         <button className="secondary-button">Request Access</button>
         <button className="primary-button compact">Grant Access</button>
@@ -1977,20 +2152,127 @@ function PermissionsPage() {
           <span key={item}>{item}</span>
         ))}
       </div>
+    </>
+  );
+
+  if (compact) {
+    return (
+      <>
+        <p className="fineprint">
+          FamilyOS does not automatically grant control over another person's account. Access is consent-based,
+          role-based, and revocable.
+        </p>
+        {content}
+      </>
+    );
+  }
+
+  return (
+    <ModulePage
+      icon={LockKeyhole}
+      kicker="Permissions"
+      title="Consent-based, role-based access"
+      summary="FamilyOS does not automatically grant control over another person's account. Access is consent-based, role-based, and revocable."
+      insight="Grace can grant or revoke access to care budget visibility at any time."
+    >
+      {content}
     </ModulePage>
   );
 }
 
-function AIInsightsPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
+function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  const opportunityTimeline = [
+    ["In 4 days", "Meal Kit trial becomes paid", "Subscription Control can guide cancellation, spending cap, or trial-card controls.", "Manage Subscriptions", "subscriptions"],
+    ["In 10 months", "Emma turns 18", "FamilyOS can surface FHSA education, credit-building basics, and student banking next steps.", "Review Education Plan", "education"],
+    ["In 14 months", "Mortgage renewal preparation window", "Start reviewing documents, HELOC utilization, and renewal scenarios before the pressure window.", "Open Housing Plan", "housing"],
+    ["In 18 months", "First-year university funding deadline", "RESP withdrawals, rent support, scholarships, and OSAP planning should be coordinated.", "Review Education Plan", "education"],
+    ["At age 65", "RRSP to RRIF education milestone", "AI Coach can remind the family to learn about registered retirement income transitions.", "Open GIC Advisor", "investments"],
+    ["Grace", "Long-term care review recommended", "Care spending is rising and Grace's permissioned care budget may need a family review.", "Review Caregiving", "caregiving"]
+  ] as const;
+
+  const eligibilityEvents = [
+    ["New baby", "RESP opportunity"],
+    ["Child turns 18", "FHSA / credit education"],
+    ["First job", "TFSA and budgeting education"],
+    ["Home purchase", "Mortgage and insurance review"],
+    ["Retirement age", "RRSP/RRIF transition education"],
+    ["Aging parent", "Caregiving and POA review"]
+  ];
+
+  const nextBestActions = [
+    ["Education Plan", "Review Emma's projected university funding gap and living expense plan.", "Education", "education"],
+    ["Housing Plan", "Prepare for mortgage renewal and HELOC review before renewal season.", "Housing", "housing"],
+    ["Subscription Control", "Manage two free trials converting this week.", "Subscriptions", "subscriptions"],
+    ["Advisor Booking", "Review investment, tax, insurance, or legacy decisions with an advisor.", "Advisor", "settings"],
+    ["GIC Scenario Builder", "Compare liquidity and maturity trade-offs for education and reserve funds.", "Investments", "investments"],
+    ["Documents Vault", "Upload POA, will, insurance, property, care, and tax documents.", "Family", "documents"]
+  ] as const;
+
   return (
     <ModulePage
       icon={Sparkles}
-      kicker="AI Insights"
-      title="Transparent family recommendations"
-      summary="AI can explain risks and next actions, but major financial, legal, tax, and investment decisions should be reviewed with a CIBC advisor."
-      insight="Recommendations distinguish verified CIBC data, optional self-reported ranges, and context that can be added later."
+      kicker="AI Coach"
+      title="Family Opportunity AI"
+      summary="FamilyOS scans life stages, product eligibility, household goals, and verified CIBC data to identify what your family may need to consider next."
+      insight="AI Coach provides educational prompts and planning reminders. It does not open accounts, move money, or make legal, tax, insurance, or investment decisions without user consent and advisor review."
     >
-      <div className="insight-page-grid">
+      <Panel title="Opportunity Timeline">
+        <div className="opportunity-timeline">
+          {opportunityTimeline.map(([time, title, detail, cta, route]) => (
+            <article key={title}>
+              <span>{time}</span>
+              <div>
+                <strong>{title}</strong>
+                <p>{detail}</p>
+                <button className="secondary-button compact" onClick={() => onNavigate(route)}>
+                  {cta}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </Panel>
+
+      <div className="two-column">
+        <Panel title="Eligibility Events">
+          <div className="eligibility-grid">
+            {eligibilityEvents.map(([trigger, opportunity]) => (
+              <article key={trigger}>
+                <span>{trigger}</span>
+                <strong>{opportunity}</strong>
+              </article>
+            ))}
+          </div>
+        </Panel>
+        <Panel title="Compliance-aware AI">
+          <div className="advisor-disclaimer">
+            <AlertTriangle size={17} />
+            <span>
+              AI Coach provides educational prompts and planning reminders. It does not open accounts, move money, or make
+              legal, tax, insurance, or investment decisions without user consent and advisor review.
+            </span>
+          </div>
+          <InsightText text="Recommendations show data source, confidence level, and when advisor review is appropriate." />
+        </Panel>
+      </div>
+
+      <Panel title="Next Best Actions">
+        <div className="next-best-grid">
+          {nextBestActions.map(([title, detail, category, route]) => (
+            <article className="priority-action-card" key={title}>
+              <span>{category}</span>
+              <h3>{title}</h3>
+              <p>{detail}</p>
+              <button className="secondary-button compact" onClick={() => onNavigate(route)}>
+                Open
+              </button>
+            </article>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel title="Transparent Recommendations">
+        <div className="insight-page-grid">
         {aiInsights.map((insight) => (
           <article className="insight-card" key={insight.title}>
             <span className="category">{insight.category}</span>
@@ -2006,7 +2288,8 @@ function AIInsightsPage({ onNavigate }: { onNavigate: (route: Route) => void }) 
             </button>
           </article>
         ))}
-      </div>
+        </div>
+      </Panel>
     </ModulePage>
   );
 }
@@ -2060,7 +2343,43 @@ function SettingsPage() {
   );
 }
 
-function AccountsPage() {
+function AccountsPage({ compact = false }: { compact?: boolean }) {
+  const content = (
+    <div className="module-grid">
+      <MetricTile label="CIBC Chequing" value="$18,400" />
+      <MetricTile label="CIBC Savings" value="$22,000" />
+      <MetricTile label="CIBC Credit Card" value="$2,140 due" />
+      <MetricTile label="CIBC Mortgage" value="$490,000" />
+      <MetricTile label="CIBC RESP" value="$32,000" />
+      <MetricTile label="CIBC TFSA" value="$42,000" />
+      <MetricTile label="External investments range" value="Prefer not to say" />
+      <MetricTile label="Property value range" value="$750K-$1M" />
+      <MetricTile label="External assets estimate" value="$750K-$1M" />
+      <MetricTile label="Liabilities estimate" value="$500K-$750K" />
+    </div>
+  );
+
+  const ownershipRows = [
+    ["CIBC Chequing", "Alex + Jamie", "Shared household visibility", "Joint Account Access"],
+    ["CIBC Savings", "Alex", "Summary shared with Jamie", "Limited Actions"],
+    ["CIBC Mortgage", "Alex + Jamie", "Shared obligation", "Joint Account Access"],
+    ["Emma RESP", "Alex + Jamie", "Shared with parents", "Education goal"],
+    ["Alex TFSA", "Alex", "Private, goal-linked only", "Goal visibility"],
+    ["Jamie RRSP", "Jamie", "Summary shared", "Retirement goal"],
+    ["CIBC Credit Card", "Alex", "Subscription-linked card", "Merchant controls enabled"]
+  ];
+
+  if (compact) {
+    return (
+      <>
+        <Panel title="Shared Accounts & Ownership">
+          <DataTable headers={["Account", "Owner", "Shared visibility", "Permission level"]} rows={ownershipRows} />
+        </Panel>
+        {content}
+      </>
+    );
+  }
+
   return (
     <ModulePage
       icon={WalletCards}
@@ -2069,18 +2388,7 @@ function AccountsPage() {
       summary="Combine a CIBC-verified view with approximate external ranges families choose to share."
       insight="Shared ranges are useful for planning but do not change ownership, permissions, or account access."
     >
-      <div className="module-grid">
-        <MetricTile label="CIBC Chequing" value="$18,400" />
-        <MetricTile label="CIBC Savings" value="$22,000" />
-        <MetricTile label="CIBC Credit Card" value="$2,140 due" />
-        <MetricTile label="CIBC Mortgage" value="$490,000" />
-        <MetricTile label="CIBC RESP" value="$32,000" />
-        <MetricTile label="CIBC TFSA" value="$42,000" />
-        <MetricTile label="External investments range" value="Prefer not to say" />
-        <MetricTile label="Property value range" value="$750K-$1M" />
-        <MetricTile label="External assets estimate" value="$750K-$1M" />
-        <MetricTile label="Liabilities estimate" value="$500K-$750K" />
-      </div>
+      {content}
     </ModulePage>
   );
 }
@@ -2273,7 +2581,7 @@ function BrandMark() {
       </div>
       <div>
         <strong>CIBC FamilyOS</strong>
-        <span>Household financial command center</span>
+        <span>Family opportunity command center</span>
       </div>
     </div>
   );
@@ -2414,6 +2722,27 @@ function CheckLine({ children }: { children: ReactNode }) {
   );
 }
 
+function InternalTabs<T extends string>({
+  tabs,
+  activeTab,
+  onTabChange
+}: {
+  tabs: { id: T; label: string; icon: LucideIcon }[];
+  activeTab: T;
+  onTabChange: (id: T) => void;
+}) {
+  return (
+    <div className="internal-tabs">
+      {tabs.map(({ id, label, icon: Icon }) => (
+        <button key={id} className={activeTab === id ? "active" : ""} onClick={() => onTabChange(id)}>
+          <Icon size={16} />
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function TimelineItem({
   label,
   date,
@@ -2469,8 +2798,11 @@ function DataTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
 }
 
 function routeTitle(route: Route) {
-  if (route === "overview") return "Family Dashboard";
-  return navItems.find((item) => item.route === route)?.label ?? "Family Dashboard";
+  const titles: Partial<Record<Route, string>> = {
+    overview: "Dashboard",
+    insights: "AI Coach"
+  };
+  return titles[route] ?? navItems.find((item) => item.route === route)?.label ?? "Dashboard";
 }
 
 function routeFromAction(category: string, onNavigate: (route: Route) => void) {
@@ -2483,7 +2815,9 @@ function routeFromAction(category: string, onNavigate: (route: Route) => void) {
     Investments: "investments",
     Protection: "protection",
     "Wealth & Legacy": "legacy",
-    Planning: "settings"
+    Planning: "settings",
+    Advisor: "settings",
+    Family: "documents"
   };
-  onNavigate(routes[category] ?? "family");
+  onNavigate(routes[category] ?? "dashboard");
 }
