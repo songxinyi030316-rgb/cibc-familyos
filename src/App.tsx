@@ -3496,363 +3496,761 @@ function PermissionsPage({ compact = false }: { compact?: boolean }) {
 }
 
 function AICoachPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
-  const primaryMilestone = engineMilestones[0];
-  const [selectedStageIndex, setSelectedStageIndex] = useState(5);
-  const [revealedCount, setRevealedCount] = useState(lifeStageKnowledgeBase[5].opportunities.length);
-  const [scanStatus, setScanStatus] = useState("Recommendations ready");
-  const [scanning, setScanning] = useState(false);
-  const [selectedMember, setSelectedMember] = useState(memberRoadmaps[2].member);
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
-  const selectedStage = lifeStageKnowledgeBase[selectedStageIndex];
-  const activeMember = memberRoadmaps.find((member) => member.member === selectedMember) ?? memberRoadmaps[0];
-  const visibleOpportunities = selectedStage.opportunities.slice(0, revealedCount);
-  const priorityOpportunities = visibleOpportunities.slice(0, 3);
-  const hiddenOpportunityCount = Math.max(0, visibleOpportunities.length - priorityOpportunities.length);
-  const stagePhases = [
-    "Foundation",
-    "Foundation",
-    "School",
-    "Money skills",
-    "Teen income",
-    "University",
-    "Ownership",
-    "Independence",
-    "Family",
-    "Home",
-    "Care",
-    "Retirement",
-    "Legacy"
+  const journeyStages = [
+    {
+      id: "early",
+      label: "Early Family",
+      appliesTo: ["New parents", "Families with young children", "Parents setting household foundations"],
+      why: "Early family setup creates a foundation for education savings, protection, beneficiaries, and emergency cash flow.",
+      triggers: ["New child", "Childcare costs", "Family protection review", "Benefit cash flow changes"],
+      support: ["RESP", "Protection review", "Advisor meeting", "Document vault"],
+      nextActions: ["Review education savings", "Check protection", "Update beneficiaries"],
+      recommendations: [
+        {
+          title: "Start or review RESP contributions",
+          trigger: "A child joins the household or education savings have not been reviewed recently",
+          whyNow: "Starting early gives the family more time to save and plan for education costs.",
+          step: "Review education savings target and contribution rhythm.",
+          support: "RESP, education savings advice, advisor meeting",
+          advisor: "Optional",
+          confidence: "Medium",
+          route: "education" as Route,
+          signals: {
+            "Age signal": "Child or dependent in household",
+            "Life stage signal": "Early family setup",
+            "Goal signal": "Education goal can be created early",
+            "Account/product signal": "RESP may be relevant",
+            "Permission signal": "Parent-guided only",
+            "Event signal": "Family cash flow changes"
+          }
+        },
+        {
+          title: "Family protection review",
+          trigger: "Dependents and household responsibilities increase",
+          whyNow: "Coverage needs can change when a family adds dependents or larger shared obligations.",
+          step: "Review life, disability, home, and critical illness coverage assumptions.",
+          support: "Insurance and protection review, advisor conversation",
+          advisor: "Recommended",
+          confidence: "Medium",
+          route: "protection" as Route,
+          signals: {
+            "Age signal": "Dependent household",
+            "Life stage signal": "Family responsibility expanding",
+            "Goal signal": "Protect household obligations",
+            "Account/product signal": "Mortgage, insurance, and savings context",
+            "Permission signal": "Owner-controlled policy visibility",
+            "Event signal": "Family setup or child benefit changes"
+          }
+        }
+      ]
+    },
+    {
+      id: "education",
+      label: "Education",
+      appliesTo: ["Teen approaching university", "University student", "Adult learner", "Parent supporting tuition", "Returning graduate student"],
+      why: "Education planning is not just age-based. It can be triggered by tuition, retraining, rent, RESP withdrawals, or parent support.",
+      triggers: ["University in 12 months", "RESP exists", "Rent budget needed", "Student banking decision", "Adult learner returning to school"],
+      support: ["RESP", "Student banking", "Budgeting tools", "Advisor meeting"],
+      nextActions: ["Review RESP withdrawal timing", "Estimate tuition and rent", "Prepare student banking"],
+      recommendations: [
+        {
+          title: "RESP withdrawal planning",
+          trigger: "Emma is expected to start university within 12 months",
+          whyNow: "RESP withdrawal timing, tuition, and rent planning should be reviewed before the first semester.",
+          step: "Review education plan and map withdrawal timing.",
+          support: "RESP, student banking, budgeting tools, advisor meeting",
+          advisor: "Optional",
+          confidence: "High",
+          route: "education" as Route,
+          signals: {
+            "Age signal": "Emma is 17",
+            "Life stage signal": "University expected within 12 months",
+            "Goal signal": "Education goal active",
+            "Account/product signal": "RESP exists",
+            "Permission signal": "Parents can assist; ownership transition is approaching",
+            "Event signal": "First-year tuition and rent planning needed"
+          }
+        },
+        {
+          title: "Rent and living cost budget",
+          trigger: "First-year housing costs are not fully planned",
+          whyNow: "Living expenses often determine the real affordability gap, not tuition alone.",
+          step: "Build a first-year rent, food, transport, and parent-support budget.",
+          support: "Budgeting tools, student banking, parent support transfer planning",
+          advisor: "No",
+          confidence: "High",
+          route: "education" as Route,
+          signals: {
+            "Age signal": "Emma is near university age",
+            "Life stage signal": "First rental or residence decision",
+            "Goal signal": "Education and independence goal active",
+            "Account/product signal": "RESP and family cash-flow context",
+            "Permission signal": "Student consent will matter at age 18",
+            "Event signal": "Rent planning before first semester"
+          }
+        },
+        {
+          title: "Student banking and credit education",
+          trigger: "Account ownership transition is approaching",
+          whyNow: "Students may need banking independence, spending controls, and credit education before moving out.",
+          step: "Review student account setup, credit education, and family visibility settings.",
+          support: "Student banking, credit education, permissions",
+          advisor: "No",
+          confidence: "High",
+          route: "education" as Route,
+          signals: {
+            "Age signal": "Emma turns 18 soon",
+            "Life stage signal": "Student banking transition",
+            "Goal signal": "Financial independence goal",
+            "Account/product signal": "Student banking and credit education",
+            "Permission signal": "Parent visibility should be reviewed",
+            "Event signal": "Account ownership transition"
+          }
+        },
+        {
+          title: "Adult learner budget",
+          trigger: "A family member plans retraining, graduate school, or part-time study",
+          whyNow: "Education can happen at any age and may affect income, debt, and savings goals.",
+          step: "Model tuition, income changes, emergency reserve, and repayment assumptions.",
+          support: "Cash flow planning, savings, advisor conversation",
+          advisor: "Optional",
+          confidence: "Medium",
+          route: "cashflow" as Route,
+          signals: {
+            "Age signal": "Not age-dependent",
+            "Life stage signal": "Returning to school",
+            "Goal signal": "Career or education goal",
+            "Account/product signal": "Savings and cash-flow context",
+            "Permission signal": "Individual owner controls shared visibility",
+            "Event signal": "Program start date"
+          }
+        }
+      ]
+    },
+    {
+      id: "career",
+      label: "Career & First Income",
+      appliesTo: ["Teen with first job", "New graduate", "Adult changing income", "Family member starting full-time work"],
+      why: "Income changes create moments to set up direct deposit, savings automation, emergency reserves, tax basics, and credit-building.",
+      triggers: ["First paycheque", "New job", "Full-time income", "Tax season", "Subscription and spending changes"],
+      support: ["Direct deposit", "Budgeting tools", "TFSA education", "Credit education"],
+      nextActions: ["Set direct deposit", "Create first income budget", "Automate savings"],
+      recommendations: [
+        {
+          title: "Direct deposit setup",
+          trigger: "First income or new employer",
+          whyNow: "First paycheques are a natural moment to introduce daily banking routines.",
+          step: "Set up direct deposit and split income into spend, save, and future goals.",
+          support: "Student banking, direct deposit setup, savings automation",
+          advisor: "No",
+          confidence: "High",
+          route: "education" as Route,
+          signals: {
+            "Age signal": "Teen or early career member",
+            "Life stage signal": "First income",
+            "Goal signal": "Build savings habits",
+            "Account/product signal": "Chequing, savings, direct deposit",
+            "Permission signal": "Account owner controls access",
+            "Event signal": "First job or new payroll"
+          }
+        },
+        {
+          title: "Emergency fund and TFSA education",
+          trigger: "Income becomes more predictable",
+          whyNow: "A steady income can support a reserve and introduce tax-efficient saving concepts.",
+          step: "Set an emergency target and review TFSA education if eligible.",
+          support: "Savings goals, TFSA education, advisor review if investing",
+          advisor: "Optional",
+          confidence: "Medium",
+          route: "investments" as Route,
+          signals: {
+            "Age signal": "Often 18+, but context-driven",
+            "Life stage signal": "Income stability",
+            "Goal signal": "Emergency reserve and first investing",
+            "Account/product signal": "Savings and TFSA education",
+            "Permission signal": "Private account ownership respected",
+            "Event signal": "Full-time work or tax season"
+          }
+        }
+      ]
+    },
+    {
+      id: "home",
+      label: "Homeownership",
+      appliesTo: ["First-time buyer", "Renewing homeowner", "Family renovating", "Adult buying later in life"],
+      why: "Homeownership can happen at many ages and often connects mortgage, protection, cash flow, property tax, and renovation reserves.",
+      triggers: ["Down payment goal", "Mortgage renewal", "HELOC change", "Property tax", "Renovation planning"],
+      support: ["Mortgage readiness", "Renewal planning", "HELOC review", "Home insurance"],
+      nextActions: ["Review mortgage readiness", "Plan renewal window", "Check protection"],
+      recommendations: [
+        {
+          title: "Mortgage renewal preparation",
+          trigger: "Renewal is 14 months away",
+          whyNow: "Families benefit from preparing before renewal pressure begins.",
+          step: "Review rate scenarios, monthly cash flow, and advisor timing.",
+          support: "Mortgage renewal planning, advisor meeting",
+          advisor: "Recommended",
+          confidence: "High",
+          route: "housing" as Route,
+          signals: {
+            "Age signal": "Not age-dependent",
+            "Life stage signal": "Homeowner responsibility",
+            "Goal signal": "Housing stability",
+            "Account/product signal": "CIBC mortgage exists",
+            "Permission signal": "Joint household visibility",
+            "Event signal": "Renewal window approaching"
+          }
+        },
+        {
+          title: "Renovation reserve and HELOC caution",
+          trigger: "Home upgrade and HELOC activity are active planning topics",
+          whyNow: "Renovation goals should be balanced against cash flow and borrowing costs.",
+          step: "Build a renovation reserve and review HELOC utilization.",
+          support: "Housing Hub, HELOC review, savings goals",
+          advisor: "Optional",
+          confidence: "Medium",
+          route: "housing" as Route,
+          signals: {
+            "Age signal": "Not age-dependent",
+            "Life stage signal": "Home upgrade",
+            "Goal signal": "Renovation and housing goal",
+            "Account/product signal": "Mortgage and HELOC context",
+            "Permission signal": "Shared owner visibility only",
+            "Event signal": "Quarterly utilization change"
+          }
+        }
+      ]
+    },
+    {
+      id: "family",
+      label: "Family Building",
+      appliesTo: ["Partners combining goals", "Parents coordinating children", "Families supporting multiple generations"],
+      why: "Family building connects shared cash flow, subscriptions, protection, beneficiaries, emergency reserve, and joint goals.",
+      triggers: ["Shared bills", "Child expenses", "Partner planning", "Protection review", "Subscription overlap"],
+      support: ["Cash flow", "Subscription Control", "Protection", "Goal Evaluator"],
+      nextActions: ["Review shared cash flow", "Assign bill owners", "Check protection"],
+      recommendations: [
+        {
+          title: "Shared household cash flow",
+          trigger: "Multiple family responsibilities overlap",
+          whyNow: "Education, caregiving, mortgage, and subscriptions all affect the safe-to-spend picture.",
+          step: "Review shared bills, owners, and emergency reserve coverage.",
+          support: "Cash flow manager, Subscription Control, Goal Evaluator",
+          advisor: "No",
+          confidence: "High",
+          route: "cashflow" as Route,
+          signals: {
+            "Age signal": "Multiple family ages",
+            "Life stage signal": "Peak family responsibility",
+            "Goal signal": "Education, care, housing",
+            "Account/product signal": "Cards, mortgage, savings",
+            "Permission signal": "Role-based family view",
+            "Event signal": "Monthly shared expenses"
+          }
+        },
+        {
+          title: "Family protection and beneficiary review",
+          trigger: "Dependents, mortgage, and elder support are active",
+          whyNow: "Coverage and beneficiaries should reflect actual family responsibilities.",
+          step: "Review policy coverage, beneficiary status, and document ownership.",
+          support: "Protection, Documents Vault, advisor meeting",
+          advisor: "Recommended",
+          confidence: "Medium",
+          route: "protection" as Route,
+          signals: {
+            "Age signal": "Cross-generational household",
+            "Life stage signal": "Family building and support",
+            "Goal signal": "Protection and continuity",
+            "Account/product signal": "Insurance and document context",
+            "Permission signal": "Owner-controlled sharing",
+            "Event signal": "Annual review window"
+          }
+        }
+      ]
+    },
+    {
+      id: "caregiving",
+      label: "Caregiving",
+      appliesTo: ["Adult child caregiver", "Older parent", "Family member with care expenses", "Trusted contact"],
+      why: "Caregiving can start unexpectedly and needs permissioned visibility, care budgets, fraud alerts, POA readiness, and approved bill payment.",
+      triggers: ["Care spending increase", "Unusual activity", "POA missing", "Approved bill payment needed"],
+      support: ["Caregiving Mode", "Permissions", "Fraud alerts", "Documents Vault"],
+      nextActions: ["Review care budget", "Confirm permissions", "Upload POA"],
+      recommendations: [
+        {
+          title: "Care budget and unusual activity review",
+          trigger: "Grace's care spending increased and an unusual transaction needs review",
+          whyNow: "Care-related changes should be reviewed while keeping Grace in control of permissions.",
+          step: "Review care budget, approved bill payment, and unusual activity alert.",
+          support: "Caregiving Mode, fraud alerts, approved bill payment",
+          advisor: "Optional",
+          confidence: "High",
+          route: "caregiving" as Route,
+          signals: {
+            "Age signal": "Grace is 72",
+            "Life stage signal": "Light caregiving support",
+            "Goal signal": "Support aging parent",
+            "Account/product signal": "Permissioned care budget activity",
+            "Permission signal": "Grace controls access and can revoke it",
+            "Event signal": "Care spending increased this quarter"
+          }
+        },
+        {
+          title: "POA and trusted contact readiness",
+          trigger: "Caregiving permissions are active but POA readiness is incomplete",
+          whyNow: "Families need clarity before urgent decisions, not during them.",
+          step: "Upload or confirm POA, trusted contacts, and emergency access settings.",
+          support: "Documents Vault, Permissions, advisor prompt",
+          advisor: "Recommended",
+          confidence: "Medium",
+          route: "documents" as Route,
+          signals: {
+            "Age signal": "Older parent in family profile",
+            "Life stage signal": "Caregiving responsibility",
+            "Goal signal": "Care continuity",
+            "Account/product signal": "Document vault and permissions",
+            "Permission signal": "Consent-based access only",
+            "Event signal": "POA document missing"
+          }
+        }
+      ]
+    },
+    {
+      id: "retirement",
+      label: "Retirement",
+      appliesTo: ["Pre-retiree", "Retired parent", "Later-career adult", "Family managing income transition"],
+      why: "Retirement planning connects income, simplified bills, fraud alerts, insurance, beneficiaries, and advisor review.",
+      triggers: ["Income transition", "RRSP/RRIF education", "CPP/OAS education", "Simplified bill needs"],
+      support: ["RRSP/RRIF education", "Advisor review", "Bill management", "Fraud alerts"],
+      nextActions: ["Map income timing", "Review bill simplicity", "Check beneficiaries"],
+      recommendations: [
+        {
+          title: "Retirement income and bill simplicity",
+          trigger: "Grace is retired and has care-related spending",
+          whyNow: "Predictable income, simpler bill management, and alerts can reduce stress.",
+          step: "Review income timing, bill setup, and trusted alerts.",
+          support: "Retirement income review, bill management, fraud alerts",
+          advisor: "Recommended",
+          confidence: "Medium",
+          route: "investments" as Route,
+          signals: {
+            "Age signal": "Grace is 72",
+            "Life stage signal": "Retirement income",
+            "Goal signal": "Stable care and bills",
+            "Account/product signal": "RRSP/RRIF education and account summary",
+            "Permission signal": "Owner-approved visibility",
+            "Event signal": "Care budget activity"
+          }
+        }
+      ]
+    },
+    {
+      id: "legacy",
+      label: "Legacy",
+      appliesTo: ["Parents", "Older adults", "Care recipients", "Families coordinating documents", "Wealth transfer conversations"],
+      why: "Legacy planning organizes wills, POA, beneficiaries, insurance policies, document sharing, and advisor conversations.",
+      triggers: ["Will outdated", "POA missing", "Beneficiary review due", "Family document sharing needed"],
+      support: ["Documents Vault", "Wealth & Legacy", "Permissions", "Advisor meeting"],
+      nextActions: ["Review will status", "Confirm beneficiaries", "Set document permissions"],
+      recommendations: [
+        {
+          title: "Estate document and beneficiary review",
+          trigger: "Legacy documents have not been reviewed recently",
+          whyNow: "Document readiness reduces confusion when family responsibilities change.",
+          step: "Review will, POA, beneficiaries, insurance policies, and sharing permissions.",
+          support: "Documents Vault, Wealth & Legacy, advisor meeting",
+          advisor: "Recommended",
+          confidence: "Medium",
+          route: "documents" as Route,
+          signals: {
+            "Age signal": "Cross-generational family",
+            "Life stage signal": "Legacy and wealth transfer readiness",
+            "Goal signal": "Estate document organization",
+            "Account/product signal": "Insurance and document vault context",
+            "Permission signal": "Document sharing is role-based",
+            "Event signal": "Documents not updated recently"
+          }
+        }
+      ]
+    }
   ];
-  const selectedStageAge = selectedStage.stage.includes(":") ? selectedStage.stage.split(":")[0] : "Family stage";
-  const selectedStageName = selectedStage.stage.includes(":") ? selectedStage.stage.split(":").slice(1).join(":").trim() : selectedStage.stage;
-  const previousStageIndex = Math.max(0, selectedStageIndex - 1);
-  const nextStageIndex = Math.min(lifeStageKnowledgeBase.length - 1, selectedStageIndex + 1);
-  const focusedStages = [
-    { label: selectedStageIndex === 0 ? "Start" : "Before", index: previousStageIndex },
-    { label: "Selected", index: selectedStageIndex },
-    { label: selectedStageIndex === lifeStageKnowledgeBase.length - 1 ? "End" : "Next", index: nextStageIndex }
-  ].filter((item, itemIndex, items) => items.findIndex((candidate) => candidate.index === item.index) === itemIndex);
-  const stageProgress = (selectedStageIndex / (lifeStageKnowledgeBase.length - 1)) * 100;
 
-  const selectStage = (index: number) => {
-    setSelectedStageIndex(index);
-    setRevealedCount(lifeStageKnowledgeBase[index].opportunities.length);
-    setScanStatus("Recommendations ready");
-    setScanning(false);
+  const memberJourneys = [
+    {
+      name: "Alex Chen",
+      age: 42,
+      role: "Primary user / parent",
+      stage: "Homeownership and parent support",
+      image: onboardingImage,
+      route: "housing" as Route,
+      current: ["Mortgage renewal", "Family cash flow", "Parent caregiving"],
+      upcoming: ["Retirement contribution review", "Protection planning"],
+      support: ["Mortgage renewal", "Caregiving Mode", "Goal Evaluator"],
+      journey: ["Homeownership", "Parent support", "Caregiving", "Retirement contribution review"],
+      recommendation: {
+        title: "Mortgage renewal and caregiving overlap",
+        trigger: "Mortgage renewal is 14 months away while parent support is active",
+        whyNow: "Alex may need to coordinate housing decisions with education and caregiving cash flow.",
+        step: "Review renewal readiness and family cash-flow capacity.",
+        support: "Housing Hub, Goal Evaluator, advisor meeting",
+        advisor: "Recommended",
+        confidence: "High",
+        route: "housing" as Route,
+        signals: {
+          "Age signal": "Alex is 42",
+          "Life stage signal": "Parent peak-responsibility years",
+          "Goal signal": "Housing, education, caregiving",
+          "Account/product signal": "Mortgage and family cash flow",
+          "Permission signal": "Care access depends on Grace's consent",
+          "Event signal": "Renewal window approaching"
+        }
+      }
+    },
+    {
+      name: "Jamie Chen",
+      age: 40,
+      role: "Spouse / partner",
+      stage: "Household coordination",
+      image: onboardingImage,
+      route: "protection" as Route,
+      current: ["Household cash flow", "Protection review", "RESP planning"],
+      upcoming: ["Retirement goal review"],
+      support: ["Cash Flow", "Protection", "Education Planner"],
+      journey: ["Household cash flow", "Protection review", "RESP planning", "Retirement goal review"],
+      recommendation: {
+        title: "Protection and RESP review",
+        trigger: "Jamie shares household expenses and education planning responsibilities",
+        whyNow: "Coverage and education planning should reflect dependents, mortgage, and family goals.",
+        step: "Review protection coverage and RESP contribution assumptions.",
+        support: "Protection, RESP, advisor meeting",
+        advisor: "Optional",
+        confidence: "Medium",
+        route: "protection" as Route,
+        signals: {
+          "Age signal": "Jamie is 40",
+          "Life stage signal": "Household coordination",
+          "Goal signal": "Protection and education",
+          "Account/product signal": "Insurance, RESP, cash flow",
+          "Permission signal": "Shared household view",
+          "Event signal": "Annual coverage review"
+        }
+      }
+    },
+    {
+      name: "Emma Chen",
+      age: 17,
+      role: "Student",
+      stage: "University transition",
+      image: educationImage,
+      route: "education" as Route,
+      current: ["RESP withdrawal planning", "Student banking", "Rent budgeting"],
+      upcoming: ["Account ownership transition", "Credit education"],
+      support: ["RESP", "Student banking", "Budgeting tools"],
+      journey: ["University transition", "Account ownership transition", "First apartment", "Early credit building", "Early investing"],
+      recommendation: journeyStages[1].recommendations[0]
+    },
+    {
+      name: "Ethan Chen",
+      age: 11,
+      role: "Dependent",
+      stage: "Primary school money habits",
+      image: educationImage,
+      route: "education" as Route,
+      current: ["Savings goal", "Allowance rhythm", "RESP tracking"],
+      upcoming: ["Pre-teen debit preparation", "First job readiness"],
+      support: ["Savings habits", "Family goal coaching", "RESP tracking"],
+      journey: ["Primary school money habits", "Pre-teen spending", "First debit habits", "First job readiness"],
+      recommendation: {
+        title: "Parent-guided money habits",
+        trigger: "Ethan is 11 and ready for simple savings and spending reflection",
+        whyNow: "Primary school is a gentle window to build habits before teen independence.",
+        step: "Create a savings goal and allowance rhythm.",
+        support: "Savings goal, family coaching prompts",
+        advisor: "No",
+        confidence: "Medium",
+        route: "education" as Route,
+        signals: {
+          "Age signal": "Ethan is 11",
+          "Life stage signal": "Primary school money habits",
+          "Goal signal": "Financial literacy and savings habit",
+          "Account/product signal": "RESP tracking and savings goal",
+          "Permission signal": "Parent-guided only",
+          "Event signal": "Pre-teen spending window"
+        }
+      }
+    },
+    {
+      name: "Grace Chen",
+      age: 72,
+      role: "Care recipient",
+      stage: "Retirement and caregiving support",
+      image: caregivingImage,
+      route: "caregiving" as Route,
+      current: ["Retirement income", "Simplified bills", "Caregiving permissions"],
+      upcoming: ["Fraud alerts", "Legacy documents"],
+      support: ["Caregiving Mode", "Permissions", "Documents Vault"],
+      journey: ["Retirement income", "Simplified bills", "Caregiving permissions", "Fraud alerts", "Legacy documents"],
+      recommendation: journeyStages[5].recommendations[0]
+    }
+  ];
+
+  const [mode, setMode] = useState<"stage" | "age">("stage");
+  const [selectedStageId, setSelectedStageId] = useState("education");
+  const [selectedMemberName, setSelectedMemberName] = useState("Emma Chen");
+  const [selectedRecommendationTitle, setSelectedRecommendationTitle] = useState("RESP withdrawal planning");
+
+  const selectedJourneyStage = journeyStages.find((stage) => stage.id === selectedStageId) ?? journeyStages[1];
+  const selectedMemberJourney = memberJourneys.find((member) => member.name === selectedMemberName) ?? memberJourneys[2];
+  const recommendations = mode === "stage" ? selectedJourneyStage.recommendations : [selectedMemberJourney.recommendation];
+  const selectedRecommendation =
+    recommendations.find((recommendation) => recommendation.title === selectedRecommendationTitle) ?? recommendations[0];
+
+  const chooseStage = (stageId: string) => {
+    const nextStage = journeyStages.find((stage) => stage.id === stageId) ?? journeyStages[1];
+    setSelectedStageId(stageId);
+    setSelectedRecommendationTitle(nextStage.recommendations[0].title);
   };
 
-  const runLifeStageScan = () => {
-    setScanning(true);
-    setRevealedCount(0);
-    scanSteps.forEach((step, index) => {
-      window.setTimeout(() => setScanStatus(step), index * 480);
-    });
-    selectedStage.opportunities.forEach((_, index) => {
-      window.setTimeout(() => setRevealedCount(index + 1), 1650 + index * 260);
-    });
-    window.setTimeout(() => {
-      setScanStatus("Recommendations ready");
-      setScanning(false);
-    }, 1650 + selectedStage.opportunities.length * 260 + 450);
+  const chooseMember = (memberName: string) => {
+    const nextMember = memberJourneys.find((member) => member.name === memberName) ?? memberJourneys[2];
+    setSelectedMemberName(memberName);
+    setSelectedRecommendationTitle(nextMember.recommendation.title);
   };
+
+  const modeLabel = mode === "stage" ? "Explore by Life Stage" : "Explore by Age Timeline";
 
   return (
-    <ModulePage
-      icon={Sparkles}
-      kicker="Life Stage Engine"
-      title="Life-stage recommendations that know when to act"
-      summary="FamilyOS helps families never miss the next important financial milestone by matching life stages to CIBC support pathways."
-      insight="Families often miss opportunities not because CIBC products do not exist, but because they do not know the right moment to act."
-    >
-      <section className="detector-intro">
+    <main className="module-page journey-engine-page">
+      <section className="journey-hero-card">
         <div>
-          <span>Family milestone engine</span>
-          <h2>Explore the next CIBC opportunity for every age and stage.</h2>
-          <blockquote>
-            CIBC FamilyOS doesn&rsquo;t wait for families to ask the right questions&mdash;it helps them discover what
-            matters next.
-          </blockquote>
+          <span className="section-kicker">Family Journey Engine</span>
+          <h2>Explore your family's next financial moments.</h2>
           <p>
-            It looks at family age stages, goals, accounts, and consent settings, then suggests the next helpful action.
+            FamilyOS combines age, life events, goals, accounts, and permissions to recommend what each family member
+            may need next.
           </p>
+          <blockquote>
+            Life stages are not always age-based. FamilyOS uses age as one signal, but recommendations are driven by
+            family context.
+          </blockquote>
         </div>
-        <div className="detector-visual-stack">
-          <img src={onboardingImage} alt="Family reviewing milestones and financial next steps together" />
-          <div className="detector-flow">
-            {[
-              ["1", "Review", "Family context"],
-              ["2", "Detect", "Next milestone"],
-              ["3", "Route", "Best action area"]
-            ].map(([step, title, text]) => (
-              <article key={title}>
-                <span>{step}</span>
-                <strong>{title}</strong>
-                <p>{text}</p>
+        <img src={onboardingImage} alt="Family reviewing journey recommendations together" />
+      </section>
+
+      <section className="journey-mode-card">
+        <div className="journey-mode-header">
+          <div>
+            <span className="section-kicker">{modeLabel}</span>
+            <h3>{mode === "stage" ? "Start with context, not birthdays." : "See age-triggered moments across the Chen family."}</h3>
+            <p>
+              {mode === "stage"
+                ? "Explore by life stage when your family's journey does not follow a traditional timeline."
+                : "Explore by age timeline to see upcoming age-triggered milestones."}
+            </p>
+          </div>
+          <div className="journey-mode-toggle" role="tablist" aria-label="Journey exploration mode">
+            <button className={mode === "stage" ? "active" : ""} onClick={() => setMode("stage")}>
+              Explore by Life Stage
+            </button>
+            <button className={mode === "age" ? "active" : ""} onClick={() => setMode("age")}>
+              Explore by Age Timeline
+            </button>
+          </div>
+        </div>
+
+        {mode === "stage" ? (
+          <>
+            <div className="journey-stage-map" aria-label="Life stage journey map">
+              {journeyStages.map((stage, index) => (
+                <button key={stage.id} className={stage.id === selectedStageId ? "active" : ""} onClick={() => chooseStage(stage.id)}>
+                  <i>{index + 1}</i>
+                  <strong>{stage.label}</strong>
+                </button>
+              ))}
+            </div>
+            <div className="journey-detail-panel">
+              <div>
+                <span className="section-kicker">{selectedJourneyStage.label}</span>
+                <h3>{selectedJourneyStage.why}</h3>
+                <p>Life stage is flexible: this stage may apply because of a goal, event, family role, or responsibility.</p>
+              </div>
+              <div className="journey-detail-grid">
+                <article>
+                  <span>Who it applies to</span>
+                  {selectedJourneyStage.appliesTo.map((item) => (
+                    <small key={item}>{item}</small>
+                  ))}
+                </article>
+                <article>
+                  <span>Common triggers</span>
+                  {selectedJourneyStage.triggers.map((item) => (
+                    <small key={item}>{item}</small>
+                  ))}
+                </article>
+                <article>
+                  <span>Related CIBC support</span>
+                  {selectedJourneyStage.support.map((item) => (
+                    <small key={item}>{item}</small>
+                  ))}
+                </article>
+                <article>
+                  <span>Recommended next actions</span>
+                  {selectedJourneyStage.nextActions.map((item) => (
+                    <small key={item}>{item}</small>
+                  ))}
+                </article>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="age-timeline-visual" aria-label="Chen family age timeline">
+              <div className="age-axis">
+                {[0, 5, 10, 15, 20, 30, 40, 50, 60, 70].map((age) => (
+                  <span key={age} style={{ left: `${Math.min(100, (age / 75) * 100)}%` }}>
+                    {age === 70 ? "70+" : age}
+                  </span>
+                ))}
+              </div>
+              <div className="age-line" />
+              {memberJourneys.map((member) => (
+                <button
+                  key={member.name}
+                  className={member.name === selectedMemberName ? "active" : ""}
+                  style={{ left: `${Math.min(100, (member.age / 75) * 100)}%` }}
+                  onClick={() => chooseMember(member.name)}
+                >
+                  <strong>{member.name.split(" ")[0]}</strong>
+                  <span>{member.age}</span>
+                </button>
+              ))}
+            </div>
+            <div className="member-age-detail">
+              <img src={selectedMemberJourney.image} alt={`${selectedMemberJourney.name} journey`} />
+              <div>
+                <span className="section-kicker">{selectedMemberJourney.name} · Age {selectedMemberJourney.age}</span>
+                <h3>{selectedMemberJourney.stage}</h3>
+                <p>
+                  Some recommendations are triggered by age, while others come from goals, events, permissions, or family
+                  responsibilities.
+                </p>
+                <div className="member-signal-columns">
+                  <article>
+                    <strong>Current recommendations</strong>
+                    {selectedMemberJourney.current.map((item) => (
+                      <small key={item}>{item}</small>
+                    ))}
+                  </article>
+                  <article>
+                    <strong>Upcoming milestones</strong>
+                    {selectedMemberJourney.upcoming.map((item) => (
+                      <small key={item}>{item}</small>
+                    ))}
+                  </article>
+                  <article>
+                    <strong>Related CIBC support</strong>
+                    {selectedMemberJourney.support.map((item) => (
+                      <small key={item}>{item}</small>
+                    ))}
+                  </article>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </section>
+
+      <section className="journey-recommendation-section">
+        <div className="section-heading">
+          <h2>{mode === "stage" ? `${selectedJourneyStage.label} recommendations` : `${selectedMemberJourney.name}'s recommendations`}</h2>
+          <p>Each recommendation stays educational and routes to an existing FamilyOS module or CIBC support pathway.</p>
+        </div>
+        <div className="journey-recommendation-grid">
+          {recommendations.map((recommendation) => (
+            <button
+              key={recommendation.title}
+              className={recommendation.title === selectedRecommendation.title ? "active" : ""}
+              onClick={() => setSelectedRecommendationTitle(recommendation.title)}
+            >
+              <span>{recommendation.confidence} confidence</span>
+              <h3>{recommendation.title}</h3>
+              <p><b>Trigger:</b> {recommendation.trigger}</p>
+              <p><b>Why now:</b> {recommendation.whyNow}</p>
+              <p><b>Next step:</b> {recommendation.step}</p>
+              <div>
+                <small>Advisor needed: {recommendation.advisor}</small>
+                <small>{recommendation.support}</small>
+              </div>
+              <strong>View details</strong>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="recommendation-logic-card">
+        <div>
+          <span className="section-kicker">Why FamilyOS recommends this</span>
+          <h2>{selectedRecommendation.title}</h2>
+          <p>{selectedRecommendation.step}</p>
+          <button className="primary-button compact" onClick={() => onNavigate(selectedRecommendation.route)}>
+            Open related module
+          </button>
+        </div>
+        <div className="logic-signal-grid">
+          {Object.entries(selectedRecommendation.signals).map(([label, value]) => (
+            <article key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="member-journey-section">
+        <div className="card-title-row">
+          <div>
+            <h2>Member-specific journey</h2>
+            <p>Click a family member to see the path FamilyOS is watching for them.</p>
+          </div>
+        </div>
+        <div className="member-journey-layout">
+          <div className="member-journey-list">
+            {memberJourneys.map((member) => (
+              <button
+                key={member.name}
+                className={member.name === selectedMemberName ? "active" : ""}
+                onClick={() => chooseMember(member.name)}
+              >
+                <span>{member.age}</span>
+                <strong>{member.name}</strong>
+                <small>{member.role}</small>
+              </button>
+            ))}
+          </div>
+          <div className="personal-journey-path">
+            {selectedMemberJourney.journey.map((item, index) => (
+              <article key={item} className={index === 0 ? "active" : ""}>
+                <i>{index + 1}</i>
+                <strong>{item}</strong>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="engine-focus-card">
-        <div className="focus-copy">
-          <span className="section-kicker">Next best action</span>
-          <h2>{primaryMilestone.member}: {primaryMilestone.category}</h2>
-          <p>{primaryMilestone.trigger}</p>
-          <div className="focus-points">
-            <span>Prepare student banking</span>
-            <span>Review RESP withdrawals</span>
-            <span>Plan first-year rent support</span>
-          </div>
-          <button className="primary-button compact" onClick={() => onNavigate(primaryMilestone.route)}>
-            Open {primaryMilestone.module}
-          </button>
-        </div>
-        <div className="focus-visual">
-          <img src={primaryMilestone.image} alt={primaryMilestone.imageAlt} />
-          <div>
-            <strong>{primaryMilestone.when}</strong>
-            <span>{primaryMilestone.confidence} confidence</span>
-          </div>
-        </div>
+      <section className="journey-principles-row">
+        {[
+          ["Context-driven", "Age is only one signal."],
+          ["Consent-aware", "Recommendations do not expose personal details without permission."],
+          ["Advisor-ready", "Major banking decisions route to review, not automatic action."]
+        ].map(([title, text]) => (
+          <article key={title}>
+            <strong>{title}</strong>
+            <span>{text}</span>
+          </article>
+        ))}
       </section>
-
-      <section className="life-stage-explorer">
-        <div className="card-title-row">
-          <div>
-            <span className="section-kicker">Explore Life Stage Opportunities</span>
-            <h2>{selectedStageName}</h2>
-            <p>Pick a life moment. FamilyOS shows the next CIBC opportunity in plain language.</p>
-          </div>
-          <button className="primary-button compact" onClick={runLifeStageScan}>
-            Run Life Stage Scan
-          </button>
-        </div>
-
-        <div className="stage-focus-timeline" aria-label="Life stage timeline">
-          <div className="stage-progress-track">
-            <span style={{ width: `${stageProgress}%` }} />
-            <i style={{ left: `${stageProgress}%` }}>{selectedStageIndex + 1}</i>
-          </div>
-          <div className="stage-neighbor-grid">
-            {focusedStages.map(({ label, index }) => {
-              const stage = lifeStageKnowledgeBase[index];
-              const age = stage.stage.includes(":") ? stage.stage.split(":")[0] : "Adult";
-              const name = stage.stage.includes(":") ? stage.stage.split(":").slice(1).join(":").trim() : stage.stage;
-              return (
-                <button
-                  key={`${label}-${stage.stage}`}
-                  className={index === selectedStageIndex ? "active" : ""}
-                  onClick={() => selectStage(index)}
-                >
-                  <span>{label}</span>
-                  <strong>{age}</strong>
-                  <small>{name}</small>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="stage-jump-row">
-          <label htmlFor="stage-select">Jump to life stage</label>
-          <select id="stage-select" value={selectedStageIndex} onChange={(event) => selectStage(Number(event.target.value))}>
-            {lifeStageKnowledgeBase.map((stage, index) => {
-              const age = stage.stage.includes(":") ? stage.stage.split(":")[0] : "Adult";
-              const name = stage.stage.includes(":") ? stage.stage.split(":").slice(1).join(":").trim() : stage.stage;
-              return (
-                <option key={stage.stage} value={index}>
-                  {age} · {name}
-                </option>
-              );
-            })}
-          </select>
-          <span>{stagePhases[selectedStageIndex]}</span>
-        </div>
-
-        <div className="stage-slider-panel compact">
-          <input
-            aria-label="Life stage selector"
-            type="range"
-            min={0}
-            max={lifeStageKnowledgeBase.length - 1}
-            value={selectedStageIndex}
-            onChange={(event) => selectStage(Number(event.target.value))}
-            onInput={(event) => selectStage(Number(event.currentTarget.value))}
-          />
-        </div>
-
-        <div className="scan-status">
-          <div>
-            <Sparkles size={18} />
-            <strong>{scanStatus}</strong>
-          </div>
-          <span>{selectedStageAge} · {priorityOpportunities.length} priority actions</span>
-        </div>
-
-        <div className="stage-spotlight-card">
-          <div>
-            <span>{selectedStageAge}</span>
-            <h3>{selectedStageName}</h3>
-            <p>{selectedStage.trigger}</p>
-          </div>
-          <div className="stage-quick-facts">
-            <article>
-              <small>For</small>
-              <strong>{selectedStage.appliesTo}</strong>
-            </article>
-            <article>
-              <small>Main risk</small>
-              <strong>{selectedStage.risks[0]}</strong>
-            </article>
-            <article>
-              <small>CIBC path</small>
-              <strong>{selectedStage.products.slice(0, 2).join(" + ")}</strong>
-            </article>
-            <article>
-              <small>Advisor</small>
-              <strong>{selectedStage.advisor ? "Recommended" : "Optional"}</strong>
-            </article>
-          </div>
-        </div>
-
-        <div className="stage-support-strip">
-          <div>
-            <span>Watch for</span>
-            <div>
-              {selectedStage.risks.slice(0, 3).map((risk) => (
-                <small key={risk}>{risk}</small>
-              ))}
-            </div>
-          </div>
-          <div>
-            <span>Connects to</span>
-            <div>
-              {selectedStage.products.slice(0, 4).map((product) => (
-                <small key={product}>{product}</small>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="opportunity-engine-grid simplified">
-          {priorityOpportunities.map((opportunity, index) => (
-            <button
-              className={`engine-opportunity-card ${scanning ? "revealing" : ""}`}
-              key={opportunity.title}
-              onClick={() => setSelectedOpportunity(opportunity)}
-              style={{ animationDelay: `${index * 90}ms` }}
-            >
-              <span>{opportunity.type}</span>
-              <h3>{opportunity.title}</h3>
-              <p>{opportunity.action}</p>
-              <div>
-                <small>{opportunity.confidence} confidence</small>
-                <small>View details</small>
-              </div>
-            </button>
-          ))}
-          {hiddenOpportunityCount > 0 && (
-            <article className="more-opportunities-card">
-              <span>More available</span>
-              <strong>{hiddenOpportunityCount} additional actions</strong>
-              <p>FamilyOS keeps the extra options in the background so this view stays focused.</p>
-            </article>
-          )}
-        </div>
-      </section>
-
-      <Panel title="How It Connects">
-        <div className="context-chip-row" aria-label="Signals reviewed by the Life Stage Engine">
-          <strong>Looks at</strong>
-          {["Ages", "Relationships", "Goals", "Accounts", "Permissions", "Events"].map((label) => (
-            <span key={label}>{label}</span>
-          ))}
-        </div>
-        <div className="route-chip-grid">
-          {actionAreas.slice(0, 5).map(([area, , trigger, route]) => (
-            <button key={area} onClick={() => onNavigate(route as Route)}>
-              <span>{trigger}</span>
-              <strong>{area}</strong>
-            </button>
-          ))}
-        </div>
-      </Panel>
-
-      <Panel title="Member-Specific Roadmaps">
-        <div className="member-roadmap-layout">
-          <div className="roadmap-member-list">
-            {memberRoadmaps.map((member) => (
-              <button
-                key={member.member}
-                className={member.member === selectedMember ? "active" : ""}
-                onClick={() => setSelectedMember(member.member)}
-              >
-                <span>{member.age}</span>
-                <strong>{member.member}</strong>
-                <small>{member.role}</small>
-              </button>
-            ))}
-          </div>
-          <div className="roadmap-detail-card">
-            <img src={activeMember.image} alt={`${activeMember.member} roadmap`} />
-            <div>
-              <span className="section-kicker">{activeMember.member}</span>
-              <h3>{activeMember.focus}</h3>
-              <div className="roadmap-list">
-                {activeMember.roadmap.map((item) => (
-                  <button key={item.title} onClick={() => onNavigate(item.route)}>
-                    <span>{item.timing}</span>
-                    <strong>{item.title}</strong>
-                    <small>{item.action}</small>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </Panel>
-
-      <Panel title="Family Opportunity Timeline">
-        <div className="full-stage-timeline">
-          {lifeStageKnowledgeBase.map((stage, index) => (
-            <button
-              key={stage.stage}
-              className={index === selectedStageIndex ? "active" : ""}
-              onClick={() => selectStage(index)}
-            >
-              <span>{index + 1}</span>
-              <strong>{stage.stage.split(":")[0]}</strong>
-              <small>{stage.opportunities.length} opportunities</small>
-            </button>
-          ))}
-        </div>
-      </Panel>
-
-      <section className="trust-mini-row">
-        <article>
-          <strong>Educational only</strong>
-          <span>No automatic product decisions.</span>
-        </article>
-        <article>
-          <strong>Consent-aware</strong>
-          <span>Personal details stay permission-based.</span>
-        </article>
-        <article>
-          <strong>Advisor-ready</strong>
-          <span>Major decisions route to human review.</span>
-        </article>
-      </section>
-
-      {selectedOpportunity && (
-        <OpportunityModal
-          opportunity={selectedOpportunity}
-          stage={selectedStage}
-          onClose={() => setSelectedOpportunity(null)}
-          onNavigate={onNavigate}
-        />
-      )}
-    </ModulePage>
+    </main>
   );
 }
 
@@ -4683,8 +5081,8 @@ function DataTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
 function routeTitle(route: Route) {
   const titles: Partial<Record<Route, string>> = {
     overview: "Dashboard",
-    insights: "Life Stage Engine",
-    ai: "Life Stage Engine"
+    insights: "Family Journey Engine",
+    ai: "Family Journey Engine"
   };
   return titles[route] ?? navItems.find((item) => item.route === route)?.label ?? "Dashboard";
 }
