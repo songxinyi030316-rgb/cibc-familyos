@@ -2992,366 +2992,457 @@ function Protection() {
   );
 }
 
+type AdvisorGoalId = "education" | "home" | "retirement" | "protection" | "emergency" | "growth";
+type AdvisorPreference = "High" | "Balanced" | "Low";
+type AdvisorRisk = "Conservative" | "Balanced" | "Growth";
+type StrategyName = "Conservative" | "Balanced" | "Growth";
+
 function Investments() {
-  const [scenario, setScenario] = useState<GicScenario>({
-    amount: 25000,
-    accountType: "TFSA",
-    gicType: "Non-cashable",
-    term: "2 years",
-    payout: "Paid at maturity",
-    goal: "Emma's education"
-  });
-  const projection = calculateGicProjection(scenario);
-  const comparisonScenarios = [
-    { label: "Starting amount", value: scenario.amount, type: "base" },
+  const goalOptions: Array<{
+    id: AdvisorGoalId;
+    title: string;
+    description: string;
+    icon: LucideIcon;
+    context: string;
+    focus: string;
+  }> = [
     {
-      label: "Cashable",
-      value: calculateGicProjection({ ...scenario, gicType: "Cashable" }).maturityValue,
-      type: "cashable"
+      id: "education",
+      title: "Education",
+      description: "Plan tuition, RESP withdrawals, rent, student banking, and parent support.",
+      icon: GraduationCap,
+      context: "Emma is expected to begin university within 10 months.",
+      focus: "Preserve liquidity while closing the first-year funding gap."
     },
     {
-      label: "Non-cashable",
-      value: calculateGicProjection({ ...scenario, gicType: "Non-cashable" }).maturityValue,
-      type: "noncashable"
+      id: "home",
+      title: "Home Purchase",
+      description: "Compare down payment timing, mortgage readiness, renewal pressure, and reserves.",
+      icon: Home,
+      context: "The Chen household has a mortgage renewal window approaching in 14 months.",
+      focus: "Keep housing plans flexible while protecting family cash flow."
     },
     {
-      label: "Escalating",
-      value: calculateGicProjection({ ...scenario, gicType: "Escalating rate" }).maturityValue,
-      type: "escalating"
+      id: "retirement",
+      title: "Retirement",
+      description: "Review RRSP/TFSA momentum, retirement timeline, income planning, and advisor fit.",
+      icon: CalendarClock,
+      context: "Alex and Jamie are in peak responsibility years with education and caregiving overlap.",
+      focus: "Balance retirement contributions with near-term family obligations."
+    },
+    {
+      id: "protection",
+      title: "Family Protection",
+      description: "Review insurance, beneficiaries, disability coverage, and family risk gaps.",
+      icon: HeartPulse,
+      context: "Mortgage, dependents, and caregiving responsibilities create protection needs.",
+      focus: "Confirm coverage before a family transition creates avoidable risk."
+    },
+    {
+      id: "emergency",
+      title: "Emergency Fund",
+      description: "Plan safe cash reserves for care needs, subscriptions, housing, and family surprises.",
+      icon: ShieldCheck,
+      context: "Emergency reserve covers about 2.1 months of household expenses.",
+      focus: "Improve resilience without locking away money needed soon."
+    },
+    {
+      id: "growth",
+      title: "Long-term Growth",
+      description: "Compare GIC, TFSA, RRSP, managed portfolio, and goal-aligned investment pathways.",
+      icon: PiggyBank,
+      context: "The family has registered and non-registered savings connected to several goals.",
+      focus: "Match time horizon, liquidity, risk, and tax treatment to the right pathway."
     }
   ];
-  const maxComparison = Math.max(...comparisonScenarios.map((item) => item.value));
-  const rows = [
-    ["Alex TFSA", "Alex", "Home upgrade goal", "$42,000", "Private, goal-linked only"],
-    ["Jamie RRSP", "Jamie", "Retirement goal", "$126,000", "Summary shared"],
-    ["Emma RESP", "Alex + Jamie", "Education goal", "$32,000", "Shared with parents"],
-    ["Non-registered", "Alex", "Family emergency reserve", "$58,000", "Shared reserve"]
+  const scanSteps = [
+    "Household cash flow",
+    "Existing CIBC accounts",
+    "Family goals",
+    "Life Stage recommendations",
+    "Liquidity needs",
+    "Product eligibility",
+    "Time horizon"
   ];
+  const [selectedGoalId, setSelectedGoalId] = useState<AdvisorGoalId | null>(null);
+  const [scanRunning, setScanRunning] = useState(false);
+  const [scanComplete, setScanComplete] = useState(false);
+  const [scanStep, setScanStep] = useState(0);
+  const [investmentAmount, setInvestmentAmount] = useState(25000);
+  const [investmentHorizon, setInvestmentHorizon] = useState(2);
+  const [liquidityPreference, setLiquidityPreference] = useState<AdvisorPreference>("Balanced");
+  const [riskPreference, setRiskPreference] = useState<AdvisorRisk>("Balanced");
+  const [activeStrategy, setActiveStrategy] = useState<StrategyName>("Balanced");
+  const [advisorNotice, setAdvisorNotice] = useState("");
+
+  const selectedGoal = goalOptions.find((goal) => goal.id === selectedGoalId);
+
+  const startAdvisorSession = (goalId: AdvisorGoalId) => {
+    setSelectedGoalId(goalId);
+    setScanRunning(true);
+    setScanComplete(false);
+    setScanStep(0);
+    setAdvisorNotice("");
+    scanSteps.forEach((_, index) => {
+      window.setTimeout(() => setScanStep(index + 1), 300 * (index + 1));
+    });
+    window.setTimeout(() => {
+      setScanRunning(false);
+      setScanComplete(true);
+    }, 2600);
+  };
+
+  const rateByStrategy: Record<StrategyName, number> = {
+    Conservative: 3.15,
+    Balanced: investmentHorizon <= 2 ? 4.05 : 4.25,
+    Growth: 5.4
+  };
+  const strategySeeds: Array<{
+    name: StrategyName;
+    label: string;
+    mix: string;
+    why: string;
+    tradeOff: string;
+    products: string;
+    advisor: string;
+    liquidity: number;
+    risk: number;
+  }> = [
+    {
+      name: "Conservative",
+      label: "RESP + cashable GIC",
+      mix: "High liquidity, lower projected return",
+      why: "Works when the family wants education money available quickly and prefers principal stability.",
+      tradeOff: "Lower return potential and less upside if the timeline extends.",
+      products: "RESP, high-interest savings, cashable GIC",
+      advisor: "Optional",
+      liquidity: 92,
+      risk: 22
+    },
+    {
+      name: "Balanced",
+      label: "RESP + 2-year GIC + monthly contributions",
+      mix: "Balanced liquidity, return, and timing",
+      why: "Matches Emma's near-term education timeline while preserving emergency reserves.",
+      tradeOff: "Some money is planned around maturity timing, so withdrawal dates should be reviewed.",
+      products: "RESP, short-term GIC, student banking, advisor meeting",
+      advisor: "Recommended",
+      liquidity: 68,
+      risk: 42
+    },
+    {
+      name: "Growth",
+      label: "RESP + balanced mutual fund pathway",
+      mix: "Higher growth potential, higher market risk",
+      why: "Can help longer horizons, but it may be less suitable for money needed in the next school year.",
+      tradeOff: "Market value can fluctuate when tuition and rent are due.",
+      products: "RESP, TFSA education, managed portfolio review",
+      advisor: "Recommended",
+      liquidity: 48,
+      risk: 72
+    }
+  ];
+  const strategyMetrics = strategySeeds.map((strategy) => {
+    const annualRate = rateByStrategy[strategy.name] + (investmentHorizon >= 5 && strategy.name === "Growth" ? 0.6 : 0);
+    const projectedValue = investmentAmount * Math.pow(1 + annualRate / 100, investmentHorizon);
+    const expectedReturn = projectedValue - investmentAmount;
+    const preferenceScore =
+      (liquidityPreference === "High" && strategy.name === "Conservative" ? 16 : 0) +
+      (liquidityPreference === "Balanced" && strategy.name === "Balanced" ? 14 : 0) +
+      (liquidityPreference === "Low" && strategy.name === "Growth" ? 12 : 0) +
+      (riskPreference === strategy.name ? 16 : 0) +
+      (riskPreference === "Balanced" && strategy.name === "Balanced" ? 10 : 0);
+    const horizonScore =
+      investmentHorizon <= 2 && strategy.name === "Balanced" ? 12 : investmentHorizon >= 5 && strategy.name === "Growth" ? 12 : 0;
+    const educationScore = selectedGoalId === "education" && strategy.name === "Balanced" ? 10 : 0;
+    const score = Math.min(98, 62 + preferenceScore + horizonScore + educationScore);
+    const goalFit = Math.min(96, score + (strategy.name === "Conservative" && liquidityPreference === "High" ? 5 : 0));
+    return {
+      ...strategy,
+      annualRate,
+      projectedValue,
+      expectedReturn,
+      returnScore: Math.min(96, Math.round(annualRate * 13 + investmentHorizon * 2)),
+      liquidityScore: strategy.liquidity,
+      riskScore: strategy.risk,
+      goalFit,
+      confidence: score >= 88 ? "High" : score >= 76 ? "Medium-high" : "Medium",
+      score
+    };
+  });
+  const recommendedStrategy = [...strategyMetrics].sort((a, b) => b.score - a.score)[0];
+  const activeStrategyData = strategyMetrics.find((strategy) => strategy.name === activeStrategy) ?? recommendedStrategy;
+
   return (
-    <ModulePage
-      icon={PiggyBank}
-      kicker="Family Goal Evaluator"
-      title="Cash flow capability, goals, and investment pathways"
-      summary="Evaluate whether the Chen Family has enough cash-flow efficiency and product alignment to reach education, housing, caregiving, retirement, and legacy goals."
-      insight="Goal recommendations should not default to a locked GIC. FamilyOS compares liquidity needs, time horizon, principal size, and CIBC product pathways before suggesting next steps."
-    >
-      <div className="advisor-disclaimer">
-        <AlertTriangle size={17} />
-        <span>These rates are illustrative for prototype purposes only.</span>
-      </div>
-
-      <GoalCapabilityBridge />
-
-      <section className="goal-evaluator-grid">
-        <Panel title="Family Goal Capability">
-          <div className="module-grid">
-            {[
-              ["Monthly income", "$12,400"],
-              ["Monthly expenses", "$8,540"],
-              ["Available capacity", "$3,860"],
-              ["Savings rate", "14%"],
-              ["Emergency coverage", "2.1 months"],
-              ["Goal funding readiness", "Moderate"]
-            ].map(([label, value]) => (
-              <MetricTile key={label} label={label} value={value} />
-            ))}
-          </div>
-        </Panel>
-        <Panel title="Goal Readiness Drivers">
-          <ProgressBar label="Cash-flow efficiency" value={69} />
-          <ProgressBar label="Education funding capacity" value={64} />
-          <ProgressBar label="Emergency liquidity" value={52} />
-          <ProgressBar label="Retirement contribution momentum" value={58} />
-          <ProgressBar label="Caregiving reserve durability" value={61} />
-        </Panel>
+    <main className="advisor-session-page">
+      <section className="advisor-session-hero">
+        <div>
+          <span className="eyebrow">AI Financial Advisor Session</span>
+          <h2>What would you like to plan today?</h2>
+          <p>
+            Choose one family goal. FamilyOS will scan the Chen Family context, explain its assumptions, compare pathways,
+            and prepare an advisor-ready next step.
+          </p>
+        </div>
+        <div className="advisor-hero-note">
+          <Sparkles size={20} />
+          <span>Educational prototype. Major decisions should be reviewed with a CIBC advisor.</span>
+        </div>
       </section>
 
-      <Panel title="Suggested CIBC Product Pathways">
-        <p className="fineprint">
-          Mock pathways for prototype only. Actual product eligibility, rates, risk, and suitability should be confirmed with a CIBC advisor.
-        </p>
-        <div className="product-pathway-grid">
-          {[
-            ["Short-term liquidity", "High-interest savings or cashable GIC", "Emergency reserve and caregiving funds that should not be locked in."],
-            ["Education timeline", "1-2 year non-cashable GIC or RESP ladder", "Emma's known university timeline may fit a short, planned maturity window."],
-            ["Longer-term growth", "Balanced mutual fund / managed portfolio", "For goals beyond 3-5 years where liquidity and market risk can be reviewed."],
-            ["Income-oriented reserve", "Monthly income fund", "For families that want distributions, with advisor review of risk and fees."],
-            ["Tax-efficient growth", "TFSA / RRSP / RESP / FHSA education", "Registered account choice depends on owner, eligibility, contribution room, and goal."]
-          ].map(([title, product, reason]) => (
-            <article className="product-pathway-card" key={title}>
-              <span>{title}</span>
-              <strong>{product}</strong>
-              <p>{reason}</p>
-              <button className="secondary-button compact">Discuss with advisor</button>
-            </article>
-          ))}
-        </div>
-      </Panel>
-
-      <section className="gic-planner-grid">
-        <Panel title="GIC Scenario Builder">
-          <div className="scenario-form">
-            <label className="field">
-              Investment amount
-              <input
-                type="number"
-                min="1000"
-                step="500"
-                value={scenario.amount}
-                onChange={(event) => setScenario({ ...scenario, amount: Number(event.target.value) || 0 })}
-              />
-            </label>
-            <ScenarioSelect
-              label="Account type"
-              value={scenario.accountType}
-              options={["Non-registered", "TFSA", "RRSP", "RRIF", "RESP", "RDSP", "FHSA", "LIF / LRIF"]}
-              onChange={(value) => setScenario({ ...scenario, accountType: value })}
-            />
-            <ScenarioSelect
-              label="GIC type"
-              value={scenario.gicType}
-              options={["Cashable", "Non-cashable", "Escalating rate"]}
-              onChange={(value) => setScenario({ ...scenario, gicType: value as GicType })}
-            />
-            <ScenarioSelect
-              label="Term length"
-              value={scenario.term}
-              options={["90 days", "180 days", "1 year", "2 years", "3 years", "5 years"]}
-              onChange={(value) => setScenario({ ...scenario, term: value })}
-            />
-            <ScenarioSelect
-              label="Interest payout"
-              value={scenario.payout}
-              options={["Paid at maturity", "Annual", "Monthly"]}
-              onChange={(value) => setScenario({ ...scenario, payout: value })}
-            />
-            <ScenarioSelect
-              label="Goal linked to"
-              value={scenario.goal}
-              options={["Emergency reserve", "Emma's education", "Home upgrade", "Retirement", "Caregiving reserve"]}
-              onChange={(value) => setScenario({ ...scenario, goal: value })}
-            />
-          </div>
-        </Panel>
-
-        <Panel title="Projected Return Results">
-          <div className="results-card">
-            <MoneyStat label="Principal amount" value={scenario.amount} />
-            <MoneyStat label="Estimated interest earned" value={projection.interest} />
-            <MoneyStat label="Estimated maturity value" value={projection.maturityValue} />
-          </div>
-          <div className="result-facts">
-            <span>Effective annual return <strong>{projection.effectiveReturn.toFixed(2)}%</strong></span>
-            <span>Liquidity level <strong>{liquidityForScenario(scenario)}</strong></span>
-            <span>Risk level <strong>Low principal risk, liquidity trade-off applies</strong></span>
-            <span>Goal fit <strong>{goalFitForScenario(scenario)}</strong></span>
-            <span>Tax note <strong>{taxNoteForAccount(scenario.accountType)}</strong></span>
-          </div>
-        </Panel>
+      <section className="goal-choice-grid" aria-label="Goal choices">
+        {goalOptions.map((goal) => {
+          const Icon = goal.icon;
+          return (
+            <button
+              className={`goal-choice-card ${selectedGoalId === goal.id ? "active" : ""}`}
+              key={goal.id}
+              onClick={() => startAdvisorSession(goal.id)}
+            >
+              <Icon size={28} />
+              <strong>{goal.title}</strong>
+              <span>{goal.description}</span>
+            </button>
+          );
+        })}
       </section>
 
-      <Panel title="GIC Classification Notes">
-        <div className="product-pathway-grid">
-          {[
-            ["Liquidity", "Cashable, redeemable, non-redeemable, market-linked"],
-            ["Registered accounts", "TFSA, RRSP, RRIF, RESP, RDSP, FHSA, LIF / LRIF"],
-            ["Payout style", "Monthly, annual, compounded, or paid at maturity"],
-            ["Household fit", "Use lock-in only when goal timing and liquidity reserve are clear"]
-          ].map(([title, detail]) => (
-            <article className="product-pathway-card compact" key={title}>
-              <span>{title}</span>
-              <strong>{detail}</strong>
-            </article>
-          ))}
-        </div>
-      </Panel>
-
-      <Panel title="Recommended Options for the Chen Family">
-        <div className="gic-recommendation-grid">
-          {recommendedGicOptions.map((option) => {
-            const result = calculateGicProjection(option);
-            return (
-              <article className="gic-option-card" key={option.title}>
-                <span>{option.title}</span>
-                <h3>{option.gicType} {option.term} GIC</h3>
-                <div className="option-facts">
-                  <small>Suggested amount <strong>{formatCurrency(option.suggestedAmount)}</strong></small>
-                  <small>Estimated return <strong>{formatCurrency(result.interest)}</strong></small>
-                  <small>Maturity value <strong>{formatCurrency(result.maturityValue)}</strong></small>
-                  <small>Liquidity <strong>{liquidityForScenario(option)}</strong></small>
-                </div>
-                <p>{option.why}</p>
-                <button
-                  className="secondary-button compact"
-                  onClick={() =>
-                    setScenario({
-                      amount: option.suggestedAmount,
-                      accountType: option.accountType,
-                      gicType: option.gicType,
-                      term: option.term,
-                      payout: option.payout,
-                      goal: option.goal
-                    })
-                  }
-                >
-                  View Scenario
-                </button>
-              </article>
-            );
-          })}
-        </div>
-      </Panel>
-
-      <Panel title="Beyond GIC: Investment Suggestion Mix">
-        <div className="investment-insight-grid">
-          {[
-            {
-              text: "If principal is not large enough to make GIC interest meaningful, consider an advisor-reviewed balanced mutual fund pathway for longer-term goals.",
-              source: "Cash-flow capacity + goal horizon",
-              confidence: "Medium",
-              action: "Compare fund pathways"
-            },
-            {
-              text: "Short-term goals should preserve liquidity. A high-interest savings structure or cashable GIC may fit better than a locked 5-year product.",
-              source: "Emergency reserve + caregiving reserve",
-              confidence: "High",
-              action: "Review liquidity reserve"
-            },
-            {
-              text: "For Emma's education, a planned RESP withdrawal ladder can be paired with short GIC maturities and student banking education.",
-              source: "Verified RESP + education timeline",
-              confidence: "High",
-              action: "Open education pathway"
-            },
-            {
-              text: "For retirement, TFSA/RRSP contribution strategy and a managed portfolio conversation may matter more than one standalone GIC comparison.",
-              source: "Contribution room + retirement goal",
-              confidence: "Medium",
-              action: "Book advisor review"
-            }
-          ].map((item) => (
-            <article className="advisor-insight-card" key={item.text}>
-              <Sparkles size={17} />
-              <p>{item.text}</p>
-              <div>
-                <span>Data source: {item.source}</span>
-                <span>Confidence: {item.confidence}</span>
-                <span>Recommended action: {item.action}</span>
-              </div>
-              <button className="secondary-button compact">View pathway</button>
-            </article>
-          ))}
-        </div>
-      </Panel>
-
-      <div className="two-column investment-analysis-grid">
-        <Panel title="Projected Value Comparison">
-          <p className="fineprint">Compare how different GIC structures may grow over the selected period.</p>
-          <div className="comparison-chart">
-            {comparisonScenarios.map((item) => (
-              <div className={`comparison-bar ${item.type}`} key={item.label}>
-                <span>{item.label}</span>
-                <i style={{ height: `${Math.max(18, (item.value / maxComparison) * 100)}%` }} />
-                <strong>{formatCurrency(item.value)}</strong>
-              </div>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel title="Goal Fit Analysis">
-          <div className="goal-fit-matrix">
-            <div className="goal-fit-row header">
-              <span>Family goal</span>
-              <span>Cashable GIC</span>
-              <span>Non-cashable GIC</span>
-              <span>Escalating GIC</span>
+      {selectedGoal && (
+        <section className="advisor-workspace">
+          <div className="advisor-scan-card">
+            <div>
+              <span className="eyebrow">{scanComplete ? "Analysis ready" : "AI scan in progress"}</span>
+              <h3>{scanComplete ? `${selectedGoal.title} plan prepared` : "Analyzing family profile..."}</h3>
+              <p>{selectedGoal.context}</p>
             </div>
-            {[
-              ["Emergency reserve", "Strong fit", "Use caution", "Use caution"],
-              ["Emma's education", "Good fit", "Strong fit", "Use caution"],
-              ["Home upgrade", "Good fit", "Good fit", "Good fit"],
-              ["Retirement", "Good fit", "Good fit", "Strong fit"],
-              ["Caregiving reserve", "Strong fit", "Use caution", "Not recommended"]
-            ].map((row) => (
-              <div className="goal-fit-row" key={row[0]}>
-                <strong>{row[0]}</strong>
-                {row.slice(1).map((status) => (
-                  <StatusChip key={status} status={status} />
-                ))}
-              </div>
-            ))}
+            <div className="scan-progress-track">
+              <i style={{ width: `${scanComplete ? 100 : Math.min(96, (scanStep / scanSteps.length) * 100)}%` }} />
+            </div>
+            <div className="scan-step-list">
+              {scanSteps.map((step, index) => (
+                <span className={index < scanStep ? "complete" : ""} key={step}>
+                  <CheckCircle2 size={16} />
+                  {step}
+                </span>
+              ))}
+            </div>
           </div>
-        </Panel>
-      </div>
 
-      <Panel title="AI Investment Insights">
-        <div className="investment-insight-grid">
-          {[
-            {
-              text: "Based on Emma's university timeline, a 1-2 year non-cashable GIC may fit better than a 5-year locked option.",
-              source: "Verified CIBC data + self-reported ranges",
-              confidence: "Medium",
-              action: "Compare Education GIC Options"
-            },
-            {
-              text: "Emergency reserve funds should remain flexible. Consider a cashable GIC or high-interest savings structure.",
-              source: "Verified savings balance + household expense assumptions",
-              confidence: "High",
-              action: "Compare Liquidity Options"
-            },
-            {
-              text: "Your TFSA contribution room may allow tax-efficient growth, but contribution limits should be confirmed.",
-              source: "Verified CIBC data only + missing external context",
-              confidence: "Medium",
-              action: "Review TFSA Scenario"
-            },
-            {
-              text: "Approximate external ranges can improve household liquidity recommendations without requiring exact balances.",
-              source: "Verified CIBC data + optional shared ranges",
-              confidence: "Medium",
-              action: "Book Advisor Review"
-            }
-          ].map((item) => (
-            <article className="advisor-insight-card" key={item.text}>
-              <Sparkles size={17} />
-              <p>{item.text}</p>
-              <div>
-                <span>Data source: {item.source}</span>
-                <span>Confidence: {item.confidence}</span>
-                <span>Recommended action: {item.action}</span>
+          {scanComplete && (
+            <div className="advisor-results-flow">
+              <section className="advisor-conversation-card">
+                <span className="eyebrow">FamilyOS reasoning</span>
+                <h3>Here is what we found.</h3>
+                <p>
+                  We found that <strong>{selectedGoal.context}</strong> The household currently has an RESP balance of
+                  <strong> $32,000</strong>, monthly available cash flow of <strong>$3,860</strong>, and an emergency
+                  reserve covering about <strong>2.1 months</strong> of expenses.
+                </p>
+                <p>
+                  Because this goal may require cash within the selected horizon, FamilyOS is weighing liquidity, product fit,
+                  risk, and advisor review before recommending a pathway.
+                </p>
+                <div className="advisor-assumption-row">
+                  <span>Goal focus: {selectedGoal.focus}</span>
+                  <span>Data used: Family profile + verified CIBC data</span>
+                  <span>Confidence: High for context, medium for external ranges</span>
+                </div>
+              </section>
+
+              <section className="advisor-strategy-section">
+                <div className="section-heading">
+                  <div>
+                    <span className="eyebrow">Three pathways</span>
+                    <h3>Choose a strategy style</h3>
+                  </div>
+                  <small>Values update when assumptions change.</small>
+                </div>
+                <div className="strategy-pathway-grid">
+                  {strategyMetrics.map((strategy) => (
+                    <button
+                      className={`strategy-pathway-card ${strategy.name === recommendedStrategy.name ? "recommended" : ""} ${
+                        strategy.name === activeStrategy ? "active" : ""
+                      }`}
+                      key={strategy.name}
+                      onClick={() => setActiveStrategy(strategy.name)}
+                    >
+                      <span>{strategy.name === recommendedStrategy.name ? `${strategy.name} recommended` : strategy.name}</span>
+                      <h4>{strategy.label}</h4>
+                      <p>{strategy.why}</p>
+                      <div className="strategy-stat-row">
+                        <small>Projected value <strong>{formatCurrency(strategy.projectedValue)}</strong></small>
+                        <small>Est. return <strong>{formatCurrency(strategy.expectedReturn)}</strong></small>
+                        <small>Confidence <strong>{strategy.confidence}</strong></small>
+                      </div>
+                      <div className="tradeoff-note">
+                        <strong>Trade-off</strong>
+                        {strategy.tradeOff}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <section className="advisor-interactive-grid">
+                <div className="scenario-builder-card">
+                  <span className="eyebrow">Interactive scenario builder</span>
+                  <h3>Adjust the assumptions</h3>
+                  <label className="advisor-range-field">
+                    <span>Investment amount</span>
+                    <strong>{formatCurrency(investmentAmount)}</strong>
+                    <input
+                      type="range"
+                      min="10000"
+                      max="50000"
+                      step="1000"
+                      value={investmentAmount}
+                      onChange={(event) => setInvestmentAmount(Number(event.target.value))}
+                    />
+                  </label>
+                  <label className="advisor-range-field">
+                    <span>Investment horizon</span>
+                    <strong>{investmentHorizon} {investmentHorizon === 1 ? "year" : "years"}</strong>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      step="1"
+                      value={investmentHorizon}
+                      onChange={(event) => setInvestmentHorizon(Number(event.target.value))}
+                    />
+                  </label>
+                  <div className="advisor-segment-field">
+                    <span>Liquidity preference</span>
+                    <div>
+                      {(["High", "Balanced", "Low"] as AdvisorPreference[]).map((option) => (
+                        <button
+                          className={liquidityPreference === option ? "active" : ""}
+                          key={option}
+                          onClick={() => setLiquidityPreference(option)}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="advisor-segment-field">
+                    <span>Risk preference</span>
+                    <div>
+                      {(["Conservative", "Balanced", "Growth"] as AdvisorRisk[]).map((option) => (
+                        <button
+                          className={riskPreference === option ? "active" : ""}
+                          key={option}
+                          onClick={() => setRiskPreference(option)}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="visual-comparison-card">
+                  <span className="eyebrow">Live comparison</span>
+                  <h3>{activeStrategyData.name} strategy</h3>
+                  <p>{activeStrategyData.mix}</p>
+                  <div className="comparison-metric-list">
+                    {[
+                      ["Expected return", activeStrategyData.returnScore],
+                      ["Liquidity", activeStrategyData.liquidityScore],
+                      ["Risk level", activeStrategyData.riskScore],
+                      ["Goal fit", activeStrategyData.goalFit]
+                    ].map(([label, value]) => (
+                      <div className="advisor-comparison-metric" key={label}>
+                        <span>{label}</span>
+                        <i><b style={{ width: `${value}%` }} /></i>
+                        <strong>{value}%</strong>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="advisor-chart">
+                    {strategyMetrics.map((strategy) => (
+                      <div key={strategy.name}>
+                        <i style={{ height: `${Math.max(26, (strategy.projectedValue / 64000) * 100)}%` }} />
+                        <span>{strategy.name}</span>
+                        <strong>{formatCurrency(strategy.projectedValue)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <section className="advisor-summary-card">
+                <Sparkles size={22} />
+                <div>
+                  <span className="eyebrow">AI summary</span>
+                  <h3>FamilyOS recommends the {recommendedStrategy.name} Strategy.</h3>
+                  <p>
+                    This pathway fits the selected timeline, preserves enough liquidity for household surprises, matches current cash flow,
+                    avoids locking emergency reserves, and connects to existing CIBC products.
+                  </p>
+                  <ul>
+                    <li>Fits Emma's education timeline and first-year planning window.</li>
+                    <li>Balances RESP use with a short-term GIC and monthly contribution rhythm.</li>
+                    <li>Flags advisor review before product selection, tax treatment, or withdrawal timing decisions.</li>
+                  </ul>
+                </div>
+              </section>
+
+              <section className="advisor-next-actions">
+                <div className="section-heading">
+                  <div>
+                    <span className="eyebrow">Next actions</span>
+                    <h3>Move from analysis to decision</h3>
+                  </div>
+                  {advisorNotice && <small className="advisor-toast">{advisorNotice}</small>}
+                </div>
+                <div className="next-action-grid">
+                  {[
+                    ["Review RESP", "Check withdrawal timing, grant treatment, and tuition schedule."],
+                    ["Compare 2-year GIC", "Review illustrative maturity timing and liquidity trade-off."],
+                    ["Schedule advisor meeting", "Prepare questions before choosing a product pathway."],
+                    ["Save this strategy", "Keep the current assumptions for the family plan."]
+                  ].map(([title, detail]) => (
+                    <article className="next-action-card" key={title}>
+                      <CheckCircle2 size={18} />
+                      <div>
+                        <strong>{title}</strong>
+                        <span>{detail}</span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                <div className="advisor-action-row">
+                  <button className="primary-button" onClick={() => setAdvisorNotice("Strategy saved for this prototype session.")}>
+                    Save Strategy
+                  </button>
+                  <button className="secondary-button" onClick={() => {
+                    setSelectedGoalId(null);
+                    setScanComplete(false);
+                  }}>
+                    Compare Another Goal
+                  </button>
+                  <button className="secondary-button" onClick={() => setAdvisorNotice("Advisor meeting request prepared for review.")}>
+                    Book Advisor
+                  </button>
+                  <button className="secondary-button" onClick={() => setAdvisorNotice("Summary export prepared for the prototype demo.")}>
+                    Export Summary
+                  </button>
+                </div>
+              </section>
+
+              <div className="advisor-disclaimer">
+                <AlertTriangle size={17} />
+                <span>
+                  Projected returns are estimates based on illustrative prototype assumptions. Actual rates, eligibility, tax treatment,
+                  ownership rules, and product suitability should be confirmed with a CIBC advisor.
+                </span>
               </div>
-              <button className="secondary-button compact">Compare options</button>
-            </article>
-          ))}
-        </div>
-      </Panel>
-
-      <div className="module-grid investment-account-summary">
-        {[
-          ["TFSA", "$42,000"],
-          ["RRSP", "$126,000"],
-          ["RESP", "$32,000"],
-          ["Non-registered investments", "$58,000"],
-          ["Risk profile", "Balanced growth"],
-          ["Asset allocation", "63% equity / 37% income"],
-          ["Contribution room", "$18,400"],
-          ["Goal alignment", "74%"]
-        ].map(([label, value]) => (
-          <MetricTile key={label} label={label} value={value} />
-        ))}
-      </div>
-      <Panel title="Current Family Investment Accounts">
-        <DataTable headers={["Account", "Owner", "Family goal", "Balance", "Sharing status / permission"]} rows={rows} />
-      </Panel>
-      <div className="advisor-disclaimer">
-        <AlertTriangle size={17} />
-        <span>
-          Projected returns are estimates based on illustrative prototype rates. RESP may allow joint original subscribers in some family situations,
-          while TFSA, RRSP, FHSA, and RRIF are generally individual registered accounts. Actual rates, eligibility, tax treatment,
-          ownership rules, and product suitability should be confirmed with a CIBC advisor.
-        </span>
-      </div>
-    </ModulePage>
+            </div>
+          )}
+        </section>
+      )}
+    </main>
   );
 }
 
