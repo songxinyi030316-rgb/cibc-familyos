@@ -2996,8 +2996,11 @@ type AdvisorGoalId = "education" | "home" | "retirement" | "protection" | "emerg
 type AdvisorPreference = "High" | "Balanced" | "Low";
 type AdvisorRisk = "Conservative" | "Balanced" | "Growth";
 type StrategyName = "Conservative" | "Balanced" | "Growth";
+type AdvisorProductId = "cashable" | "noncashable" | "fund" | "portfolio";
 
 function Investments() {
+  return <GoalAdvisorExperience />;
+
   const goalOptions: Array<{
     id: AdvisorGoalId;
     title: string;
@@ -3075,7 +3078,7 @@ function Investments() {
   const [activeStrategy, setActiveStrategy] = useState<StrategyName>("Balanced");
   const [advisorNotice, setAdvisorNotice] = useState("");
 
-  const selectedGoal = goalOptions.find((goal) => goal.id === selectedGoalId);
+  const selectedGoal = goalOptions.find((goal) => goal.id === selectedGoalId) ?? goalOptions[0];
 
   const startAdvisorSession = (goalId: AdvisorGoalId) => {
     setSelectedGoalId(goalId);
@@ -3442,6 +3445,474 @@ function Investments() {
           )}
         </section>
       )}
+    </main>
+  );
+}
+
+function GoalAdvisorExperience() {
+  const [showCustomize, setShowCustomize] = useState(false);
+  const [investmentAmount, setInvestmentAmount] = useState(25000);
+  const [investmentHorizon, setInvestmentHorizon] = useState(2);
+  const [liquidityPreference, setLiquidityPreference] = useState<AdvisorPreference>("Balanced");
+  const [riskPreference, setRiskPreference] = useState<AdvisorRisk>("Balanced");
+  const [expectedMarketReturn, setExpectedMarketReturn] = useState(7);
+  const [primeRate, setPrimeRate] = useState(3.25);
+  const [advisorNotice, setAdvisorNotice] = useState("");
+  const [activeProducts, setActiveProducts] = useState<Record<AdvisorProductId, boolean>>({
+    cashable: true,
+    noncashable: true,
+    fund: true,
+    portfolio: true
+  });
+
+  const productOptions: Array<{
+    id: AdvisorProductId;
+    name: string;
+    category: string;
+    color: string;
+    rate: number;
+    band: number;
+    fixed: boolean;
+  }> = [
+    {
+      id: "cashable",
+      name: "Cashable GIC",
+      category: "Flexible reserve",
+      color: "#2f80ed",
+      rate: Math.max(2.2, primeRate - 0.15),
+      band: 0.1,
+      fixed: true
+    },
+    {
+      id: "noncashable",
+      name: "Non-cashable GIC",
+      category: "Planned maturity",
+      color: "#b9862c",
+      rate: 4.05,
+      band: 0.05,
+      fixed: true
+    },
+    {
+      id: "fund",
+      name: "Balanced Mutual Fund",
+      category: "Market-linked",
+      color: "#2aa876",
+      rate: expectedMarketReturn,
+      band: 2,
+      fixed: false
+    },
+    {
+      id: "portfolio",
+      name: "Managed Portfolio",
+      category: "Advisor-managed",
+      color: "#870f2d",
+      rate: expectedMarketReturn + 0.75,
+      band: 2.5,
+      fixed: false
+    }
+  ];
+  const strategySeeds: Array<{
+    name: StrategyName;
+    label: string;
+    rate: number;
+    liquidity: number;
+    risk: number;
+    why: string;
+  }> = [
+    {
+      name: "Conservative",
+      label: "RESP + cashable GIC",
+      rate: Math.max(2.2, primeRate - 0.05),
+      liquidity: 92,
+      risk: 24,
+      why: "Preserves access if tuition, rent, or emergency needs move sooner than expected."
+    },
+    {
+      name: "Balanced",
+      label: "RESP + 2-year GIC + monthly contributions",
+      rate: investmentHorizon <= 2 ? 4.05 : (4.05 + expectedMarketReturn) / 2,
+      liquidity: 74,
+      risk: 44,
+      why: "Matches Emma's near-term education timeline while keeping emergency reserves intact."
+    },
+    {
+      name: "Growth",
+      label: "RESP + market-linked portfolio review",
+      rate: expectedMarketReturn,
+      liquidity: 48,
+      risk: 76,
+      why: "May help longer timelines, but market movement can matter when tuition is close."
+    }
+  ];
+  const strategyMetrics = strategySeeds.map((strategy) => {
+    const projectedValue = investmentAmount * Math.pow(1 + strategy.rate / 100, investmentHorizon);
+    const expectedReturn = projectedValue - investmentAmount;
+    const preferenceScore =
+      (liquidityPreference === "High" && strategy.name === "Conservative" ? 18 : 0) +
+      (liquidityPreference === "Balanced" && strategy.name === "Balanced" ? 18 : 0) +
+      (liquidityPreference === "Low" && strategy.name === "Growth" ? 14 : 0) +
+      (riskPreference === strategy.name ? 16 : 0) +
+      (riskPreference === "Balanced" && strategy.name === "Balanced" ? 10 : 0);
+    const timelineScore =
+      investmentHorizon <= 2 && strategy.name === "Balanced" ? 18 : investmentHorizon >= 5 && strategy.name === "Growth" ? 16 : 0;
+    const score = Math.min(98, 60 + preferenceScore + timelineScore);
+    return {
+      ...strategy,
+      projectedValue,
+      expectedReturn,
+      confidence: score >= 88 ? "High" : score >= 76 ? "Medium-high" : "Medium",
+      goalFit: Math.min(98, score),
+      score
+    };
+  });
+  const recommendedStrategy = [...strategyMetrics].sort((a, b) => b.score - a.score)[0];
+  const selectedProductSeries = productOptions.filter((product) => activeProducts[product.id]);
+  const chartWidth = 760;
+  const chartHeight = 330;
+  const chartPadding = 42;
+  const educationTarget = 33000;
+  const balancedProjection = investmentAmount * Math.pow(1 + strategyMetrics[1].rate / 100, investmentHorizon);
+  const expectedReturn = balancedProjection - investmentAmount;
+  const goalProbability = Math.min(98, Math.max(54, Math.round((balancedProjection / educationTarget) * 100)));
+  const maxProjectedValue = Math.max(
+    educationTarget * 1.12,
+    ...selectedProductSeries.flatMap((product) =>
+      [product.rate + product.band, product.rate].map((rate) =>
+        investmentAmount * Math.pow(1 + Math.max(0.01, rate) / 100, investmentHorizon)
+      )
+    )
+  );
+  const getPoint = (year: number, value: number) => {
+    const x = chartPadding + (year / Math.max(1, investmentHorizon)) * (chartWidth - chartPadding * 2);
+    const y = chartHeight - chartPadding - (value / maxProjectedValue) * (chartHeight - chartPadding * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  };
+  const getSeriesPoints = (rate: number) =>
+    Array.from({ length: investmentHorizon + 1 }, (_, year) => {
+      const value = investmentAmount * Math.pow(1 + Math.max(0.01, rate) / 100, year);
+      return getPoint(year, value);
+    }).join(" ");
+  const getBandPoints = (rate: number, band: number) => {
+    const years = Array.from({ length: investmentHorizon + 1 }, (_, year) => year);
+    const upper = years.map((year) =>
+      getPoint(year, investmentAmount * Math.pow(1 + Math.max(0.01, rate + band) / 100, year))
+    );
+    const lower = years
+      .slice()
+      .reverse()
+      .map((year) => getPoint(year, investmentAmount * Math.pow(1 + Math.max(0.01, rate - band) / 100, year)));
+    return [...upper, ...lower].join(" ");
+  };
+  const getProjectedY = (value: number) => Number(getPoint(investmentHorizon, value).split(",")[1]);
+  const liquidityScore = liquidityPreference === "High" ? 92 : liquidityPreference === "Balanced" ? 74 : 48;
+  const riskScore = riskPreference === "Conservative" ? 24 : riskPreference === "Balanced" ? 46 : 72;
+  const liveReason =
+    investmentHorizon <= 1
+      ? "You indicated funds may be needed within 12 months. FamilyOS is prioritizing flexibility and reducing long-term locked or market-linked recommendations."
+      : investmentHorizon >= 5
+        ? "You extended the horizon to five years or more. FamilyOS can now consider more long-term investment exposure because liquidity is less urgent."
+        : liquidityPreference === "High"
+          ? "You increased the need for liquidity. FamilyOS keeps the education strategy balanced but shifts more weight toward cashable options."
+          : riskPreference === "Growth"
+            ? "You selected a growth preference. FamilyOS raises the market-linked pathway, but keeps advisor review because Emma's tuition timeline is still near."
+            : primeRate >= 4
+              ? "You raised the prime rate assumption. FamilyOS gives more credit to flexible GIC-like options while monitoring borrowing and cash-flow pressure."
+              : "Your current assumptions keep the Balanced Education Strategy first because it fits Emma's timeline without locking the emergency reserve.";
+  const applyWhatIf = (scenario: string) => {
+    setShowCustomize(true);
+    setAdvisorNotice("");
+    if (scenario === "increase") setInvestmentAmount((value) => Math.min(50000, value + 5000));
+    if (scenario === "delay") setInvestmentHorizon((value) => Math.min(10, value + 1));
+    if (scenario === "liquidity") setLiquidityPreference("High");
+    if (scenario === "reduce") setInvestmentAmount((value) => Math.max(10000, value - 5000));
+    if (scenario === "market") setExpectedMarketReturn((value) => Math.min(10, Number((value + 1).toFixed(1))));
+    if (scenario === "rates") setPrimeRate((value) => Math.min(6, Number((value + 0.5).toFixed(2))));
+  };
+
+  return (
+    <main className="advisor-session-page">
+      <section className="advisor-recommendation-hero">
+        <div className="advisor-recommendation-copy">
+          <span className="eyebrow">AI Financial Advisor Experience</span>
+          <h2>Based on everything I know about your household, here is the strategy I would recommend.</h2>
+          <p>
+            Emma's university starts in approximately 10 months. FamilyOS reviewed RESP balance, household cash flow,
+            education goal, emergency reserve, and expected liquidity needs.
+          </p>
+          <div className="advisor-recommendation-badge">
+            <Sparkles size={19} />
+            <strong>FamilyOS recommends the Balanced Education Strategy.</strong>
+          </div>
+        </div>
+        <div className="advisor-recommendation-panel">
+          <div className="advisor-panel-header">
+            <span>Recommended strategy</span>
+            <strong>{strategyMetrics[1].label}</strong>
+          </div>
+          <div className="advisor-hero-metrics">
+            <MoneyStat label="Estimated return" value={expectedReturn} />
+            <MetricTile label="Goal fit" value={`${goalProbability}%`} />
+            <MetricTile label="Liquidity" value={liquidityPreference} />
+            <MetricTile label="Risk" value={riskPreference} />
+          </div>
+          <div className="goal-probability">
+            <div>
+              <span>Education goal probability</span>
+              <strong>{goalProbability}%</strong>
+            </div>
+            <i><b style={{ width: `${goalProbability}%` }} /></i>
+          </div>
+        </div>
+      </section>
+
+      <section className="advisor-opening-grid">
+        <div className="advisor-conversation-card">
+          <span className="eyebrow">Why this recommendation</span>
+          <h3>FamilyOS is optimizing for timing, not just return.</h3>
+          <p>
+            Emma's education expenses are close enough that preserving liquidity matters more than maximizing long-term return.
+            The Balanced Education Strategy keeps RESP planning visible, adds a planned maturity window, and avoids using the
+            emergency reserve for tuition or rent.
+          </p>
+          <div className="advisor-assumption-row">
+            <span>RESP balance: $32,000</span>
+            <span>Available monthly cash flow: $3,860</span>
+            <span>Emergency reserve: 2.1 months</span>
+          </div>
+        </div>
+
+        <div className="advisor-mini-chart-card">
+          <span className="eyebrow">Simple projection</span>
+          <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label="Recommended strategy projected growth">
+            <line x1={chartPadding} y1={chartHeight - chartPadding} x2={chartWidth - chartPadding} y2={chartHeight - chartPadding} />
+            <line x1={chartPadding} y1={chartPadding} x2={chartPadding} y2={chartHeight - chartPadding} />
+            <polyline points={getSeriesPoints(strategyMetrics[1].rate)} />
+            <circle cx={chartWidth - chartPadding} cy={getProjectedY(balancedProjection)} r="7" />
+          </svg>
+          <div>
+            <strong>{formatCurrency(balancedProjection)}</strong>
+            <span>Projected value at {investmentHorizon} years using illustrative assumptions.</span>
+          </div>
+        </div>
+      </section>
+
+      {!showCustomize && (
+        <section className="advisor-customize-gate">
+          <div>
+            <span className="eyebrow">Explore alternatives</span>
+            <h3>Customize only when you want to change assumptions.</h3>
+            <p>Open the workspace for live sliders, product curves, scenario bands, and what-if shortcuts.</p>
+          </div>
+          <button className="primary-button" onClick={() => setShowCustomize(true)}>
+            Customize Recommendation
+          </button>
+        </section>
+      )}
+
+      {showCustomize && (
+        <section className="advisor-workspace">
+          <section className="advisor-interactive-grid">
+            <div className="scenario-builder-card">
+              <span className="eyebrow">Scenario explorer</span>
+              <h3>Adjust assumptions live</h3>
+              <label className="advisor-range-field">
+                <span>Investment amount</span>
+                <strong>{formatCurrency(investmentAmount)}</strong>
+                <input type="range" min="10000" max="50000" step="1000" value={investmentAmount} onChange={(event) => setInvestmentAmount(Number(event.target.value))} />
+              </label>
+              <label className="advisor-range-field">
+                <span>Time horizon</span>
+                <strong>{investmentHorizon} {investmentHorizon === 1 ? "year" : "years"}</strong>
+                <input type="range" min="1" max="10" step="1" value={investmentHorizon} onChange={(event) => setInvestmentHorizon(Number(event.target.value))} />
+              </label>
+              <div className="advisor-segment-field">
+                <span>Liquidity preference</span>
+                <div>
+                  {(["High", "Balanced", "Low"] as AdvisorPreference[]).map((option) => (
+                    <button className={liquidityPreference === option ? "active" : ""} key={option} onClick={() => setLiquidityPreference(option)}>
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="advisor-segment-field">
+                <span>Risk preference</span>
+                <div>
+                  {(["Conservative", "Balanced", "Growth"] as AdvisorRisk[]).map((option) => (
+                    <button className={riskPreference === option ? "active" : ""} key={option} onClick={() => setRiskPreference(option)}>
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <label className="advisor-range-field">
+                <span>Expected market return</span>
+                <strong>{expectedMarketReturn.toFixed(1)}%</strong>
+                <input type="range" min="3" max="10" step="0.5" value={expectedMarketReturn} onChange={(event) => setExpectedMarketReturn(Number(event.target.value))} />
+              </label>
+              <label className="advisor-range-field">
+                <span>Prime rate assumption</span>
+                <strong>{primeRate.toFixed(2)}%</strong>
+                <input type="range" min="2" max="6" step="0.25" value={primeRate} onChange={(event) => setPrimeRate(Number(event.target.value))} />
+              </label>
+            </div>
+
+            <div className="advisor-curve-card">
+              <div className="section-heading">
+                <div>
+                  <span className="eyebrow">Interactive product comparison</span>
+                  <h3>Toggle curves to compare pathways</h3>
+                </div>
+                <small>Illustrative prototype rates</small>
+              </div>
+              <div className="product-toggle-grid">
+                {productOptions.map((product) => (
+                  <button
+                    className={activeProducts[product.id] ? "active" : ""}
+                    key={product.id}
+                    onClick={() => setActiveProducts({ ...activeProducts, [product.id]: !activeProducts[product.id] })}
+                  >
+                    <i style={{ background: product.color }} />
+                    <strong>{product.name}</strong>
+                    <span>{product.rate.toFixed(2)}% {product.fixed ? "fixed" : "scenario band"}</span>
+                  </button>
+                ))}
+              </div>
+              <svg className="advisor-curve-chart" viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label="Product comparison projection chart">
+                <line x1={chartPadding} y1={chartHeight - chartPadding} x2={chartWidth - chartPadding} y2={chartHeight - chartPadding} />
+                <line x1={chartPadding} y1={chartPadding} x2={chartPadding} y2={chartHeight - chartPadding} />
+                <text x={chartPadding} y={chartPadding - 12}>{formatCurrency(Math.round(maxProjectedValue))}</text>
+                <text x={chartPadding} y={chartHeight - 12}>Now</text>
+                <text x={chartWidth - chartPadding - 40} y={chartHeight - 12}>{investmentHorizon}Y</text>
+                {selectedProductSeries.map((product) => (
+                  <g key={product.id}>
+                    {!product.fixed && <polygon className="scenario-band" points={getBandPoints(product.rate, product.band)} style={{ fill: product.color }} />}
+                    <polyline className="product-curve" points={getSeriesPoints(product.rate)} style={{ stroke: product.color }} />
+                    <circle
+                      cx={chartWidth - chartPadding}
+                      cy={getProjectedY(investmentAmount * Math.pow(1 + product.rate / 100, investmentHorizon))}
+                      r="5"
+                      style={{ fill: product.color }}
+                    />
+                  </g>
+                ))}
+              </svg>
+              <div className="curve-legend-row">
+                {selectedProductSeries.map((product) => (
+                  <span key={product.id}><i style={{ background: product.color }} />{product.name}</span>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="advisor-live-grid">
+            <div className="advisor-summary-card">
+              <Sparkles size={22} />
+              <div>
+                <span className="eyebrow">Live AI reasoning</span>
+                <h3>{recommendedStrategy.name} Strategy is currently ranked first.</h3>
+                <p>{liveReason}</p>
+                <div className="advisor-assumption-row compact">
+                  <span>Projected value: {formatCurrency(balancedProjection)}</span>
+                  <span>Expected return: {formatCurrency(expectedReturn)}</span>
+                  <span>Goal probability: {goalProbability}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="visual-comparison-card">
+              <span className="eyebrow">Goal progress</span>
+              <h3>Education Goal</h3>
+              <div className="goal-probability large">
+                <div>
+                  <span>Completion probability</span>
+                  <strong>{goalProbability}%</strong>
+                </div>
+                <i><b style={{ width: `${goalProbability}%` }} /></i>
+              </div>
+              <div className="comparison-metric-list">
+                {[
+                  ["Goal fit", goalProbability],
+                  ["Liquidity", liquidityScore],
+                  ["Risk level", riskScore],
+                  ["Confidence", recommendedStrategy.score]
+                ].map(([label, value]) => (
+                  <div className="advisor-comparison-metric" key={label}>
+                    <span>{label}</span>
+                    <i><b style={{ width: `${value}%` }} /></i>
+                    <strong>{value}%</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="what-if-panel">
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">What if...</span>
+                <h3>Try scenario shortcuts</h3>
+              </div>
+              <small>Each button updates the assumptions instantly.</small>
+            </div>
+            <div className="what-if-grid">
+              {[
+                ["increase", "Increase investment by $5,000"],
+                ["delay", "Delay university by one year"],
+                ["liquidity", "Need emergency liquidity"],
+                ["reduce", "Reduce monthly savings"],
+                ["market", "Higher market return"],
+                ["rates", "Higher interest rates"]
+              ].map(([scenario, label]) => (
+                <button key={scenario} onClick={() => applyWhatIf(scenario)}>
+                  {label}
+                  <ChevronRight size={16} />
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="advisor-next-actions">
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">Recommended Action Plan</span>
+                <h3>Finish with a decision path</h3>
+              </div>
+              {advisorNotice && <small className="advisor-toast">{advisorNotice}</small>}
+            </div>
+            <div className="next-action-grid">
+              {[
+                ["RESP Review", "Check withdrawal timing, grant treatment, and tuition schedule."],
+                ["Compare 2-year GIC", "Review illustrative maturity timing and liquidity trade-off."],
+                ["Monthly contribution schedule", "Set a small recurring top-up without weakening emergency cash."],
+                ["Student banking", "Prepare account ownership, debit, credit education, and rent support."],
+                ["Advisor meeting", "Review product suitability before acting."]
+              ].map(([title, detail]) => (
+                <article className="next-action-card" key={title}>
+                  <CheckCircle2 size={18} />
+                  <div>
+                    <strong>{title}</strong>
+                    <span>{detail}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="advisor-action-row">
+              <button className="primary-button" onClick={() => setAdvisorNotice("Strategy saved for this prototype session.")}>Save Strategy</button>
+              <button className="secondary-button" onClick={() => setAdvisorNotice("Scenario comparison reset is ready for the demo.")}>Compare Another Scenario</button>
+              <button className="secondary-button" onClick={() => setAdvisorNotice("Advisor meeting request prepared for review.")}>Book Advisor</button>
+            </div>
+          </section>
+        </section>
+      )}
+
+      <div className="advisor-disclaimer">
+        <AlertTriangle size={17} />
+        <span>
+          Projected returns are estimates based on illustrative prototype assumptions. Actual rates, eligibility, tax treatment,
+          ownership rules, and product suitability should be confirmed with a CIBC advisor.
+        </span>
+      </div>
     </main>
   );
 }
