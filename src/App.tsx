@@ -2158,104 +2158,249 @@ function renderRoute(
 }
 
 function DashboardPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  const timelineItems: Array<{
+    time: string;
+    owner: string;
+    opportunity: string;
+    priority: "High" | "Medium" | "Review";
+    route: Route;
+  }> = [
+    {
+      time: "Today",
+      owner: "Ethan",
+      opportunity: "Money habits window",
+      priority: "Medium",
+      route: "education"
+    },
+    {
+      time: "4 days",
+      owner: "Subscriptions",
+      opportunity: "Two trials convert to paid plans",
+      priority: "High",
+      route: "subscriptions"
+    },
+    {
+      time: "3 months",
+      owner: "Protection",
+      opportunity: "Review family coverage",
+      priority: "Review",
+      route: "protection"
+    },
+    {
+      time: "10 months",
+      owner: "Emma",
+      opportunity: "University transition",
+      priority: "High",
+      route: "education"
+    },
+    {
+      time: "14 months",
+      owner: "Housing",
+      opportunity: "Mortgage renewal preparation",
+      priority: "Medium",
+      route: "housing"
+    },
+    {
+      time: "This quarter",
+      owner: "Grace",
+      opportunity: "Caregiving and fraud review",
+      priority: "High",
+      route: "caregiving"
+    },
+    {
+      time: "Long term",
+      owner: "Legacy",
+      opportunity: "Document and beneficiary review",
+      priority: "Review",
+      route: "documents"
+    }
+  ];
+
+  const continueActions: Array<{
+    title: string;
+    detail: string;
+    due: string;
+    cta: string;
+    route: Route;
+  }> = [
+    {
+      title: "Review Emma's education plan",
+      detail: "Confirm tuition, rent, RESP withdrawal timing, and student banking steps.",
+      due: "Start this week",
+      cta: "Review plan",
+      route: "education"
+    },
+    {
+      title: "Confirm Grace's unusual transaction",
+      detail: "Check the permissioned care alert before the next care-budget review.",
+      due: "Due today",
+      cta: "Review alert",
+      route: "caregiving"
+    },
+    {
+      title: "Manage two trial subscriptions",
+      detail: "Meal Kit and Streaming Sports trials convert soon unless capped or cancelled.",
+      due: "4 days left",
+      cta: "Manage trials",
+      route: "subscriptions"
+    }
+  ];
+
+  const otherRecommendations = [
+    ["Ethan", "Money habits", "education"],
+    ["Grace", "Caregiving review", "caregiving"],
+    ["Housing", "Mortgage renewal", "housing"],
+    ["Subscriptions", "Trial ending", "subscriptions"]
+  ] as const;
+
   return (
     <main className="family-dashboard">
-      <section className="priority-banner">
-        <div>
-          <span>Life Stage Engine</span>
-          <h2>Top AI recommendations for the Chen Family</h2>
-          <p>
-            FamilyOS helps families never miss the next important financial milestone by turning age, goals,
-            accounts, permissions, and events into next best actions.
-          </p>
-          <button className="primary-button compact" onClick={() => onNavigate("ai")}>
-            Run Life Stage Scan
-          </button>
+      <section className="agent-home-card">
+        <div className="agent-home-content">
+          <span className="section-kicker">FamilyOS scan complete</span>
+          <h2>Good afternoon, Alex.</h2>
+          <p>FamilyOS completed today's family scan and found the best place to start.</p>
+
+          <div className="scan-metric-row">
+            {[
+              ["5", "family members reviewed"],
+              ["12", "opportunities detected"],
+              ["4", "actions recommended"]
+            ].map(([value, label]) => (
+              <article key={label}>
+                <strong>{value}</strong>
+                <span>{label}</span>
+              </article>
+            ))}
+          </div>
+
+          <div className="start-here-panel">
+            <span>Start here</span>
+            <h3>Emma starts university in 10 months.</h3>
+            <p>FamilyOS detected an active RESP, an education goal, and a projected first-year funding gap.</p>
+            <strong>Projected gap: $7,800</strong>
+            <div>
+              <button className="primary-button compact" onClick={() => onNavigate("education")}>
+                Review Education Plan
+              </button>
+              <button className="secondary-button compact" onClick={() => onNavigate("ai")}>
+                View all recommendations
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="priority-visual">
-          <img src={onboardingImage} alt="Family reviewing financial priorities together" />
+        <div className="agent-home-visual">
+          <img src={educationImage} alt="Parent and student reviewing education planning" />
+          <div>
+            <Sparkles size={18} />
+            <span>Best next action found</span>
+          </div>
         </div>
       </section>
 
-      <section className="recommended-actions compact-recommendations">
+      <section className="todays-opportunity">
         <div className="section-heading">
-          <h2>Top AI Recommendations</h2>
-          <p>
-            Families do not miss opportunities because products do not exist. They miss them because they do not know
-            the right moment to act.
-          </p>
+          <h2>Today's Top Opportunity</h2>
+          <p>Here's where FamilyOS recommends starting today.</p>
         </div>
-        <div className="top-recommendation-grid">
-          {topRecommendations.map((item) => (
-            <article className="top-recommendation-card" key={item.title}>
+        <article className="top-opportunity-card">
+          <div>
+            <span className="priority-pill high">High priority</span>
+            <h3>Emma Chen - University transition</h3>
+            <dl>
               <div>
-                <span className={`priority-pill ${item.priority.toLowerCase()}`}>{item.priority}</span>
-                <small>{item.member}</small>
+                <dt>Trigger</dt>
+                <dd>Turns 18 before first-year tuition</dd>
               </div>
-              <h3>{item.title}</h3>
-              <p>{item.trigger}</p>
-              <button className="secondary-button compact" onClick={() => onNavigate(item.route)}>
-                {item.cta}
+              <div>
+                <dt>Why now</dt>
+                <dd>University planning needs tuition, rent, RESP withdrawal, student banking, and credit education within the next 10-12 months.</dd>
+              </div>
+              <div>
+                <dt>Recommended next action</dt>
+                <dd>Review Education Plan</dd>
+              </div>
+            </dl>
+          </div>
+          <aside>
+            <span>Related FamilyOS module</span>
+            <strong>Planning - Education</strong>
+            <span>Related CIBC support</span>
+            <strong>RESP, Student Banking, Advisor meeting</strong>
+            <span>Data source</span>
+            <strong>Family profile + verified RESP data</strong>
+            <span>Confidence</span>
+            <strong>High</strong>
+            <button className="primary-button compact" onClick={() => onNavigate("education")}>
+              Review Education Plan
+            </button>
+          </aside>
+        </article>
+        <div className="other-recommendations-row">
+          <span>Other recommendations</span>
+          {otherRecommendations.map(([owner, label, route]) => (
+            <button key={`${owner}-${label}`} onClick={() => onNavigate(route as Route)}>
+              <strong>{owner}</strong>
+              {label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="card calm-card timeline-card">
+        <div className="card-title-row">
+          <div>
+            <h2>Upcoming Family Timeline</h2>
+            <p>What is coming next, and when your family may need to act.</p>
+          </div>
+        </div>
+        <div className="agent-timeline">
+          {timelineItems.map((item) => (
+            <article key={`${item.time}-${item.opportunity}`} className={item.priority.toLowerCase()}>
+              <i />
+              <div>
+                <span>{item.time}</span>
+                <strong>{item.owner}</strong>
+                <p>{item.opportunity}</p>
+              </div>
+              <button onClick={() => onNavigate(item.route)}>View</button>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="card calm-card">
+        <div className="card-title-row">
+          <div>
+            <h2>Continue where you left off</h2>
+            <p>Practical actions FamilyOS queued from today's scan.</p>
+          </div>
+        </div>
+        <div className="action-queue-grid">
+          {continueActions.map((action) => (
+            <article key={action.title}>
+              <span>{action.due}</span>
+              <h3>{action.title}</h3>
+              <p>{action.detail}</p>
+              <button className="secondary-button compact" onClick={() => onNavigate(action.route)}>
+                {action.cta}
               </button>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="card calm-card">
-        <div className="card-title-row">
-          <div>
-            <h2>Upcoming Timeline Preview</h2>
-            <p>Who needs attention now, what comes next, and where FamilyOS routes the family.</p>
-          </div>
-          <button className="secondary-button compact" onClick={() => onNavigate("ai")}>
-            Explore all stages
-          </button>
-        </div>
-        <div className="dashboard-timeline-preview">
-          {lifeStageMoments.map((moment) => (
-            <article key={moment.member}>
-              <span>{moment.timing}</span>
-              <strong>{moment.member}</strong>
-              <p>{moment.stage}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="card calm-card">
+      <section className="card calm-card compact-readiness-card">
         <div className="card-title-row">
           <div>
             <h2>Family Readiness Snapshot</h2>
-            <p>A household-first view of what is on track, what needs review, and what needs action.</p>
+            <p>A compact status view. FamilyOS keeps the recommendation focus above.</p>
           </div>
           <button className="secondary-button compact" onClick={() => onNavigate("planning")}>
-            Open family status
+            Open Family Status
           </button>
         </div>
-        <ReadinessMatrix />
-      </section>
-
-      <section className="card calm-card">
-        <div className="card-title-row">
-          <div>
-            <h2>Quick Actions</h2>
-            <p>Open the action area behind each recommendation.</p>
-          </div>
-        </div>
-        <div className="quick-action-row">
-          {[
-            ["Education Planner", "education"],
-            ["Caregiving Mode", "caregiving"],
-            ["Subscription Control", "subscriptions"],
-            ["Goal Evaluator", "investments"],
-            ["Family Admin", "family"]
-          ].map(([label, route]) => (
-            <button key={label} className="secondary-button compact" onClick={() => onNavigate(route as Route)}>
-              {label}
-            </button>
-          ))}
-        </div>
+        <ReadinessMatrix compact />
       </section>
     </main>
   );
@@ -3942,7 +4087,7 @@ function GoalsPage() {
 }
 
 function ReadinessMatrix({ compact = false }: { compact?: boolean }) {
-  const items = compact ? readinessStatuses.filter(([label]) => !["Retirement", "Legacy"].includes(label)) : readinessStatuses;
+  const items = compact ? readinessStatuses.filter(([label]) => label !== "Retirement") : readinessStatuses;
   return (
     <div className={`readiness-matrix ${compact ? "compact" : ""}`}>
       {items.map(([label, status]) => (
