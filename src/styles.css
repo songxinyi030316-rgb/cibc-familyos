@@ -8197,9 +8197,61 @@ button {
 
 .primary-learning-entry {
   min-height: 220px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.34fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
   background:
-    radial-gradient(circle at 92% 4%, rgba(185, 134, 44, 0.2), transparent 24%),
+    radial-gradient(circle at 88% 28%, rgba(185, 134, 44, 0.26), transparent 25%),
     linear-gradient(135deg, #fff 0%, #fff6f8 100%);
+}
+
+.strategy-builder-cta-panel {
+  display: grid;
+  gap: 12px;
+  justify-items: stretch;
+  border: 1px solid rgba(122, 0, 38, 0.14);
+  border-radius: 24px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 22px 44px rgba(122, 0, 38, 0.12);
+}
+
+.strategy-builder-cta-panel > span {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: #fff2f5;
+  color: var(--maroon);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.strategy-builder-cta-panel small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.primary-button.strategy-builder-cta {
+  justify-content: center;
+  min-height: 64px;
+  width: 100%;
+  padding: 20px 24px;
+  border-radius: 18px;
+  font-size: clamp(17px, 1.15vw, 21px);
+  box-shadow: 0 20px 42px rgba(122, 0, 38, 0.28);
+}
+
+.primary-button.strategy-builder-cta svg {
+  transition: transform 0.2s ease;
+}
+
+.primary-button.strategy-builder-cta:hover svg {
+  transform: translateX(4px);
 }
 
 .product-learning-conversation {
@@ -8329,6 +8381,7 @@ button {
   .question-layout,
   .home-priority-card,
   .advisor-next-step-card,
+  .primary-learning-entry,
   .product-learning-conversation,
   .gic-planner-grid,
   .investment-analysis-grid {

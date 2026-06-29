@@ -2613,9 +2613,14 @@ function ProductLearningPage({ onNavigate }: { onNavigate: (route: Route) => voi
           <h2>Ready to compare financial strategies?</h2>
           <p>Let's build one together for Emma's education timeline, then prepare questions for advisor review.</p>
         </div>
-        <button className="primary-button" onClick={() => setShowStrategyBuilder(!showStrategyBuilder)}>
-          {showStrategyBuilder ? "Hide Strategy Builder" : "Start Strategy Builder"}
-        </button>
+        <div className="strategy-builder-cta-panel">
+          <span>Recommended next step</span>
+          <button className="primary-button strategy-builder-cta" onClick={() => setShowStrategyBuilder(!showStrategyBuilder)}>
+            {showStrategyBuilder ? "Hide Strategy Builder" : "Start Strategy Builder"}
+            <ChevronRight size={22} />
+          </button>
+          <small>Compare RESP, GIC, and investment paths in about 3 minutes.</small>
+        </div>
       </section>
       {showStrategyBuilder && <GoalAdvisorConversation />}
 
