@@ -2370,35 +2370,247 @@ function DashboardPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
   );
 }
 
-function FamilyAdvisorPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
-  const [selectedPrompt, setSelectedPrompt] = useState("Prepare Emma for university");
-  const prompts = [
+const advisorPrompts = [
     "Prepare Emma for university",
     "Review Grace's care plan",
+    "Build Ethan's money habits",
     "Understand investment options",
     "Plan for mortgage renewal",
     "Improve household cash flow",
     "I'm not sure - guide me"
-  ];
+] as const;
+
+type AdvisorPrompt = (typeof advisorPrompts)[number];
+
+type AdvisorJourneyMock = {
+  heroTitle: string;
+  heroCopy: string;
+  primaryLabel: string;
+  kicker: string;
+  title: string;
+  lead: string;
+  image: string;
+  caption: string;
+  progress: number;
+  facts: Array<[string, string]>;
+  steps: Array<[string, string]>;
+  nextActions: string[];
+  route: Route;
+};
+
+const advisorJourneyMocks: Record<AdvisorPrompt, AdvisorJourneyMock> = {
+  "Prepare Emma for university": {
+    heroTitle: "Let's continue Emma's university journey.",
+    heroCopy: "FamilyOS recommends starting here because university is the next major household moment.",
+    primaryLabel: "Continue recommended journey",
+    kicker: "Emma University Journey",
+    title: "Emma starts university in about 10 months.",
+    lead: "Review RESP funding, rent assumptions, student banking, and first-year support.",
+    image: educationImage,
+    caption: "Education planning becomes easier when it is broken into small steps.",
+    progress: 35,
+    facts: [
+      ["Emma", "17, daughter"],
+      ["Timeline", "University in about 10 months"],
+      ["RESP", "$32,000"],
+      ["Next step", "Review RESP funding"]
+    ],
+    steps: [
+      ["Understand situation", "Confirm age, university timing, RESP, and rent budget status."],
+      ["Estimate first-year cost", "Tuition, rent, books, food, transit, and setup costs."],
+      ["Review funding", "Compare RESP, parent support, and estimated gap."],
+      ["Learn options", "Review RESP, student banking, GIC, and liquidity trade-offs."],
+      ["Advisor summary", "Prepare questions before any product decision."]
+    ],
+    nextActions: ["Review RESP funding", "Estimate rent budget", "Prepare student banking questions"],
+    route: "ai"
+  },
+  "Review Grace's care plan": {
+    heroTitle: "Let's review Grace's care plan.",
+    heroCopy: "FamilyOS noticed care spending, permissioned access, and an unusual activity alert that may need a family check-in.",
+    primaryLabel: "Continue Grace care review",
+    kicker: "Grace Care Journey",
+    title: "Grace's care plan needs a permissioned review.",
+    lead: "Walk through care budget, approved bill payments, trusted access, fraud alerts, and POA readiness.",
+    image: caregivingImage,
+    caption: "Care planning stays respectful when access is permission-based.",
+    progress: 55,
+    facts: [
+      ["Grace", "72, parent / elder"],
+      ["Care budget", "$1,200 of $1,500 used"],
+      ["Access", "Alex can view + pay approved bills"],
+      ["Alert", "Unusual $640 transaction"],
+      ["Document", "POA status not confirmed"]
+    ],
+    steps: [
+      ["Review care budget", "Check pharmacy, home support, and recurring care expenses."],
+      ["Confirm permissions", "Make sure Alex and Jamie only see what Grace has approved."],
+      ["Review unusual activity", "Confirm whether the $640 transaction is expected."],
+      ["Check documents", "Add POA, trusted contact, and emergency contact status."],
+      ["Prepare advisor questions", "Discuss fraud alerts, bill support, and access boundaries."]
+    ],
+    nextActions: ["Confirm unusual transaction", "Review caregiver permissions", "Add POA status"],
+    route: "family"
+  },
+  "Understand investment options": {
+    heroTitle: "Let's understand investment options together.",
+    heroCopy: "FamilyOS can explain products in plain language before the family compares strategies or talks to an advisor.",
+    primaryLabel: "Open Product Learning",
+    kicker: "Investment Learning Journey",
+    title: "Compare options without turning this into a spreadsheet.",
+    lead: "Learn what each product is good for, what to watch out for, and how it may fit Emma's timeline.",
+    image: legacyImage,
+    caption: "Product learning should support the next decision, not overwhelm it.",
+    progress: 42,
+    facts: [
+      ["Goal", "Emma education planning"],
+      ["Timeline", "Near-term funding need"],
+      ["Preference", "Balanced liquidity"],
+      ["Products", "RESP, GIC, TFSA, funds, portfolios"]
+    ],
+    steps: [
+      ["Start with plain language", "Understand what each product does and does not do."],
+      ["Compare liquidity", "Separate near-term tuition money from longer-term growth goals."],
+      ["Review risk", "See why higher-return options may not fit short timelines."],
+      ["Build scenario", "Use Strategy Builder after the product basics are clear."],
+      ["Prepare advisor questions", "Bring assumptions and trade-offs into the conversation."]
+    ],
+    nextActions: ["Open Product Learning", "Start Strategy Builder", "Save questions for advisor"],
+    route: "investments"
+  },
+  "Build Ethan's money habits": {
+    heroTitle: "Let's build Ethan's money habits.",
+    heroCopy: "FamilyOS noticed Ethan is at a useful age for parent-guided saving, allowance rhythms, and simple spending reflection.",
+    primaryLabel: "Continue Ethan habit plan",
+    kicker: "Ethan Money Habits Journey",
+    title: "Ethan is ready for early money confidence.",
+    lead: "Introduce saving goals, allowance routines, spending reflection, and future debit readiness without giving unsupervised account control.",
+    image: onboardingImage,
+    caption: "Early money habits work best when they feel simple and parent-guided.",
+    progress: 24,
+    facts: [
+      ["Ethan", "11, son"],
+      ["Stage", "Primary school money habits"],
+      ["Access", "No account access"],
+      ["Goal", "Future RESP planning"],
+      ["Parent role", "Guide, observe, coach"]
+    ],
+    steps: [
+      ["Choose a savings goal", "Pick a visible goal Ethan can understand, such as a school trip or hobby."],
+      ["Set allowance rhythm", "Create a small spend-save-share pattern that parents can discuss weekly."],
+      ["Introduce reflection", "Review purchases without judgment so spending feels teachable."],
+      ["Track RESP context", "Keep education savings visible to parents, not Ethan's responsibility."],
+      ["Prepare next stage", "Before first job or debit habits, revisit permissions and banking education."]
+    ],
+    nextActions: ["Create savings goal", "Set allowance rhythm", "Plan pre-teen debit readiness"],
+    route: "planning"
+  },
+  "Plan for mortgage renewal": {
+    heroTitle: "Let's prepare the mortgage renewal conversation.",
+    heroCopy: "FamilyOS noticed the renewal is approaching while education and caregiving costs may overlap.",
+    primaryLabel: "Continue renewal plan",
+    kicker: "Alex + Jamie Housing Journey",
+    title: "Mortgage renewal preparation starts before the deadline.",
+    lead: "Review renewal timing, cash flow pressure, HELOC use, property costs, and advisor questions.",
+    image: heroImage,
+    caption: "Housing decisions are easier when the whole household context is visible.",
+    progress: 28,
+    facts: [
+      ["Alex + Jamie", "Homeowners"],
+      ["Renewal", "14 months away"],
+      ["Mortgage balance", "$490,000"],
+      ["Home value", "$950,000"],
+      ["Overlap", "Education + caregiving costs"]
+    ],
+    steps: [
+      ["Review renewal timing", "Start preparing questions six months before renewal."],
+      ["Check household cash flow", "Estimate mortgage payment sensitivity alongside education costs."],
+      ["Review HELOC use", "Understand whether utilization needs a repayment plan."],
+      ["Confirm protection", "Check home insurance and life/disability coverage assumptions."],
+      ["Prepare advisor meeting", "Bring renewal, cash flow, and goal trade-offs together."]
+    ],
+    nextActions: ["Build renewal question list", "Review HELOC utilization", "Check payment scenarios"],
+    route: "planning"
+  },
+  "Improve household cash flow": {
+    heroTitle: "Let's simplify this month's household cash flow.",
+    heroCopy: "FamilyOS noticed shared bills, parent support, education savings, and subscription charges all competing for attention.",
+    primaryLabel: "Continue cash flow review",
+    kicker: "Household Cash Flow Journey",
+    title: "A clearer shared cash-flow plan can reduce family stress.",
+    lead: "Review safe-to-spend, bill ownership, subscription cleanup, parent support, and emergency reserve coverage.",
+    image: subscriptionImage,
+    caption: "Small recurring decisions can make household cash flow feel calmer.",
+    progress: 46,
+    facts: [
+      ["Income", "$12,400/month"],
+      ["Expenses", "$8,540/month"],
+      ["Emergency reserve", "2.1 months"],
+      ["Subscriptions", "$96/month savings identified"],
+      ["Parent support", "$320 above average"]
+    ],
+    steps: [
+      ["Review shared bills", "Confirm who owns mortgage, utilities, insurance, and care support."],
+      ["Check safe-to-spend", "Protect the next 14 days before moving money into goals."],
+      ["Clean subscriptions", "Review free trials, duplicates, and merchant caps."],
+      ["Update emergency target", "Compare 2.1 months with a 4-6 month target."],
+      ["Prepare next action", "Decide what to automate and what needs advisor review."]
+    ],
+    nextActions: ["Review bill ownership", "Manage subscription trials", "Update emergency reserve target"],
+    route: "planning"
+  },
+  "I'm not sure - guide me": {
+    heroTitle: "No problem. I'll choose the best place to start.",
+    heroCopy: "FamilyOS can scan the household and suggest one next step without making you choose a module.",
+    primaryLabel: "Run guided household scan",
+    kicker: "Guided Household Scan",
+    title: "FamilyOS found one high-priority moment and a few secondary items.",
+    lead: "Start with Emma's university timeline, then keep Grace care, subscriptions, and mortgage renewal visible.",
+    image: onboardingImage,
+    caption: "You do not need to know where to click. FamilyOS can lead.",
+    progress: 35,
+    facts: [
+      ["Top priority", "Emma university in 10 months"],
+      ["Second priority", "Grace care review"],
+      ["This week", "Subscription trials"],
+      ["Later", "Mortgage renewal preparation"]
+    ],
+    steps: [
+      ["Start with one thing", "Review Emma's RESP funding before adding other tasks."],
+      ["Keep care visible", "Grace's permissions and alert can be reviewed after education planning."],
+      ["Clean quick wins", "Subscription trial controls can reduce avoidable charges."],
+      ["Prepare future decisions", "Mortgage renewal and legacy documents stay in the timeline."],
+      ["Return home", "FamilyOS will surface the next moment when it becomes primary."]
+    ],
+    nextActions: ["Continue Emma journey", "Review Grace care after", "Keep other moments in timeline"],
+    route: "dashboard"
+  }
+};
+
+function FamilyAdvisorPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  const [selectedPrompt, setSelectedPrompt] = useState<AdvisorPrompt>("Prepare Emma for university");
+  const selectedJourney = advisorJourneyMocks[selectedPrompt];
 
   return (
     <main className="family-advisor-page">
       <section className="advisor-welcome-card advisor-next-step-card">
         <div>
           <span className="section-kicker">Family Advisor</span>
-          <h2>Let's continue Emma's university journey.</h2>
-          <p>FamilyOS recommends starting here because university is the next major household moment.</p>
-          <button className="primary-button" onClick={() => setSelectedPrompt("Prepare Emma for university")}>Continue recommended journey</button>
+          <h2>{selectedJourney.heroTitle}</h2>
+          <p>{selectedJourney.heroCopy}</p>
+          <button className="primary-button" onClick={() => selectedPrompt === "Prepare Emma for university" ? setSelectedPrompt("Prepare Emma for university") : onNavigate(selectedJourney.route)}>
+            {selectedJourney.primaryLabel}
+          </button>
         </div>
-        <SmallIllustration image={onboardingImage} caption="A guided place to work through household decisions." />
+        <SmallIllustration image={selectedJourney.image} caption={selectedJourney.caption} />
       </section>
 
       <div className="section-heading secondary-choice-heading">
         <h2>Need a different focus?</h2>
-        <p>These are available, but FamilyOS will keep Emma's journey as today's primary path.</p>
+        <p>Pick a household moment and FamilyOS will update the guided path below.</p>
       </div>
       <section className="advisor-prompt-grid">
-        {prompts.map((prompt) => (
+        {advisorPrompts.map((prompt) => (
           <button key={prompt} className={selectedPrompt === prompt ? "active" : ""} onClick={() => setSelectedPrompt(prompt)}>
             <Sparkles size={18} />
             <span>{prompt}</span>
@@ -2409,16 +2621,72 @@ function FamilyAdvisorPage({ onNavigate }: { onNavigate: (route: Route) => void 
       {selectedPrompt === "Prepare Emma for university" ? (
         <EmmaUniversityJourney onNavigate={onNavigate} />
       ) : (
-        <section className="concierge-placeholder">
-          <span className="section-kicker">Guided journey</span>
-          <h2>{selectedPrompt}</h2>
-          <p>FamilyOS will walk through this one step at a time. For the demo, the strongest complete path is Emma's university journey.</p>
-          <button className="primary-button" onClick={() => setSelectedPrompt("Prepare Emma for university")}>
-            Open Emma University Journey
-          </button>
-        </section>
+        <MockFamilyJourney journey={selectedJourney} onNavigate={onNavigate} />
       )}
     </main>
+  );
+}
+
+function MockFamilyJourney({ journey, onNavigate }: { journey: AdvisorJourneyMock; onNavigate: (route: Route) => void }) {
+  return (
+    <section className="guided-family-journey">
+      <div className="journey-intro">
+        <div>
+          <span className="section-kicker">{journey.kicker}</span>
+          <h2>{journey.title}</h2>
+          <p>{journey.lead}</p>
+          <ProgressBar label="Journey progress" value={journey.progress} />
+        </div>
+        <SmallIllustration image={journey.image} caption={journey.caption} />
+      </div>
+
+      <article className="journey-step-card">
+        <div className="section-heading with-action">
+          <div>
+            <h3>What FamilyOS noticed</h3>
+            <p>This journey uses mock Chen Family context so the selected focus feels specific, not generic.</p>
+          </div>
+          <button className="primary-button compact" onClick={() => onNavigate(journey.route)}>
+            Open related area
+          </button>
+        </div>
+        <div className="journey-fact-grid">
+          {journey.facts.map(([label, value]) => (
+            <MetricTile key={label} label={label} value={value} />
+          ))}
+        </div>
+      </article>
+
+      <div className="guided-journey-grid">
+        <article className="guided-journey-card">
+          <h3>Guided steps</h3>
+          <div className="guided-step-list">
+            {journey.steps.map(([title, detail], index) => (
+              <div key={title}>
+                <span>{index + 1}</span>
+                <div>
+                  <strong>{title}</strong>
+                  <p>{detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+        <article className="guided-journey-card next-action-card">
+          <h3>Next best actions</h3>
+          {journey.nextActions.map((action) => (
+            <div className="next-action-row" key={action}>
+              <CheckCircle2 size={17} />
+              <span>{action}</span>
+            </div>
+          ))}
+          <button className="primary-button" onClick={() => onNavigate(journey.route)}>
+            Continue this journey
+            <ChevronRight size={18} />
+          </button>
+        </article>
+      </div>
+    </section>
   );
 }
 
