@@ -166,11 +166,12 @@ const familyMembers: FamilyMember[] = [
 ];
 
 const navItems: { route: Route; label: string; icon: LucideIcon }[] = [
-  { route: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { route: "ai", label: "Life Stage Engine", icon: Sparkles },
-  { route: "planning", label: "Family Status", icon: Gauge },
-  { route: "investments", label: "Goal Evaluator", icon: PiggyBank },
-  { route: "family", label: "Family Admin", icon: UsersRound },
+  { route: "dashboard", label: "Home", icon: LayoutDashboard },
+  { route: "ai", label: "Family Advisor", icon: Sparkles },
+  { route: "family", label: "My Household", icon: UsersRound },
+  { route: "planning", label: "Journeys", icon: Gauge },
+  { route: "investments", label: "Product Learning", icon: PiggyBank },
+  { route: "insights", label: "Advisor Summary", icon: ClipboardCheck },
   { route: "settings", label: "Settings", icon: Settings }
 ];
 
@@ -1697,10 +1698,6 @@ function useAppRoute(): [
       setRoute("family");
       return;
     }
-    if (nextRoute === "insights") {
-      setRoute("ai");
-      return;
-    }
     if (nextRoute === "goals" || nextRoute === "cashflow") {
       setRoute("investments");
       return;
@@ -1818,50 +1815,178 @@ function AuthPage({ initialTab, onNavigate }: { initialTab: "signin" | "create";
 
 function OnboardingPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
   const [step, setStep] = useState(0);
-  const steps = ["Family Members", "Household Goals", "Assets & Accounts", "Permissions & Consent", "Summary"];
+  const [householdType, setHouseholdType] = useState("Multi-generation household");
+  const [preparingFor, setPreparingFor] = useState("Education");
+  const [comingSoon, setComingSoon] = useState("University");
+  const [sharingComfort, setSharingComfort] = useState("Approximate ranges");
+  const [scanStep, setScanStep] = useState(0);
+  const [members, setMembers] = useState(familyMembers);
+  const steps = [
+    "Household",
+    "Members",
+    "Priorities",
+    "Upcoming",
+    "Comfort",
+    "Scan"
+  ];
+
+  useEffect(() => {
+    if (step !== 5) return;
+    setScanStep(0);
+    const interval = window.setInterval(() => {
+      setScanStep((value) => Math.min(4, value + 1));
+    }, 520);
+    return () => window.clearInterval(interval);
+  }, [step]);
+
+  const scanItems = [
+    "Understanding your household",
+    "Finding upcoming moments",
+    "Reviewing financial goals",
+    "Matching CIBC support",
+    "Preparing your first recommendation"
+  ];
+
+  const removeMember = (name: string) => setMembers((current) => current.filter((member) => member.name !== name));
+  const addEmmaBack = () => {
+    if (!members.some((member) => member.name === "Emma Chen")) {
+      setMembers((current) => [...current, familyMembers[2]]);
+    }
+  };
 
   return (
-    <main className="onboarding">
+    <main className="concierge-onboarding">
       <div className="onboarding-header">
         <BrandMark />
         <div>
-          <span>Step {step + 1} of 5</span>
-          <h1>{steps[step]}</h1>
+          <span>Step {step + 1} of {steps.length}</span>
+          <h1>Hi Alex. Let's get to know your household.</h1>
         </div>
       </div>
-      <div className="onboarding-visual">
-        <img src={onboardingImage} alt="Family reviewing financial setup together around a tablet" />
-        <div>
-          <strong>Household setup, with consent at the center.</strong>
-          <span>FamilyOS uses onboarding to connect goals, accounts, roles, permissions, and optional context families choose to share.</span>
-        </div>
-      </div>
-      <div className="stepper">
+      <div className="concierge-stepper">
         {steps.map((item, index) => (
           <button key={item} className={index <= step ? "active" : ""} onClick={() => setStep(index)}>
-            {index + 1}
             <span>{item}</span>
           </button>
         ))}
       </div>
-      <section className="onboarding-card">
-        {step === 0 && <FamilyMembersStep />}
-        {step === 1 && <HouseholdGoalsStep />}
-        {step === 2 && <AssetsStep />}
-        {step === 3 && <PermissionsConsentStep />}
-        {step === 4 && <SummaryStep />}
+      <section className="concierge-question-card">
+        {step === 0 && (
+          <div className="question-layout">
+            <div>
+              <span className="section-kicker">One person still counts as a household</span>
+              <h2>Who is in your household?</h2>
+              <p>This helps FamilyOS understand whether it should watch for individual, partner, child, or caregiving moments.</p>
+              <ChoiceGrid
+                value={householdType}
+                onChange={setHouseholdType}
+                options={["Just me", "Couple", "Family with children", "Multi-generation household", "Custom"]}
+              />
+            </div>
+            <SmallIllustration image={onboardingImage} caption="Family context helps recommendations feel relevant." />
+          </div>
+        )}
+        {step === 1 && (
+          <div>
+            <span className="section-kicker">Your household members</span>
+            <h2>Does this look right?</h2>
+            <p>You can edit this later. FamilyOS uses roles and ages to notice upcoming moments, not to judge anyone.</p>
+            <div className="simple-member-list">
+              {members.map((member) => (
+                <article key={member.name}>
+                  <div className="member-avatar">{member.name.split(" ").map((part) => part[0]).join("")}</div>
+                  <div>
+                    <strong>{member.name}</strong>
+                    <span>{member.age}, {member.relationship}</span>
+                  </div>
+                  <button className="ghost-button compact" onClick={() => removeMember(member.name)}>Remove</button>
+                </article>
+              ))}
+            </div>
+            <div className="onboarding-inline-actions">
+              <button className="secondary-button compact" onClick={addEmmaBack}>Add Emma back</button>
+              <button className="secondary-button compact">Add someone else</button>
+            </div>
+          </div>
+        )}
+        {step === 2 && (
+          <div className="question-layout">
+            <div>
+              <span className="section-kicker">Household priorities</span>
+              <h2>What is your household preparing for?</h2>
+              <p>Choose the closest answer. If you are not sure, FamilyOS can guide you.</p>
+              <ChoiceGrid
+                value={preparingFor}
+                onChange={setPreparingFor}
+                options={["Education", "Home / mortgage", "Retirement", "Caregiving", "Emergency fund", "Learning about investing", "Not sure yet"]}
+              />
+            </div>
+            <SmallIllustration image={educationImage} caption="A clear priority gives the concierge one place to start." />
+          </div>
+        )}
+        {step === 3 && (
+          <div>
+            <span className="section-kicker">Upcoming moments</span>
+            <h2>Is anything important coming up soon?</h2>
+            <p>FamilyOS will use this as a gentle reminder layer, not a deadline.</p>
+            <ChoiceGrid
+              value={comingSoon}
+              onChange={setComingSoon}
+              options={["University", "First job", "Buying a home", "Mortgage renewal", "Caring for parent", "Retirement", "No major event right now"]}
+            />
+          </div>
+        )}
+        {step === 4 && (
+          <div className="question-layout">
+            <div>
+              <span className="section-kicker">Privacy first</span>
+              <h2>How much financial context are you comfortable sharing?</h2>
+              <p>You can skip anything. More context helps FamilyOS give more relevant guidance, but you stay in control.</p>
+              <ChoiceGrid value={sharingComfort} onChange={setSharingComfort} options={["Exact numbers", "Approximate ranges", "Skip for now"]} />
+              <div className="trust-chip-row">
+                {["Optional", "Editable anytime", "Consent-based", "Used for planning only"].map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            </div>
+            <SmallIllustration image={caregivingImage} caption="FamilyOS explains what it uses and why." />
+          </div>
+        )}
+        {step === 5 && (
+          <div className="scan-finish-layout">
+            <div>
+              <span className="section-kicker">Household scan</span>
+              <h2>Here is what I found.</h2>
+              <p>You do not need to think about everything today. Let's start with one thing.</p>
+              <div className="scan-list">
+                {scanItems.map((item, index) => (
+                  <div className={index <= scanStep ? "complete" : ""} key={item}>
+                    <CheckCircle2 size={17} />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="first-recommendation-card">
+              <Sparkles size={24} />
+              <span>First recommendation</span>
+              <h3>Emma starts university in about 10 months.</h3>
+              <p>FamilyOS can walk you through tuition, rent, RESP timing, student banking, and questions for an advisor.</p>
+            </div>
+          </div>
+        )}
       </section>
       <div className="onboarding-actions">
         <button className="secondary-button" disabled={step === 0} onClick={() => setStep(Math.max(0, step - 1))}>
           Back
         </button>
-        {step < 4 ? (
+        {step < steps.length - 1 ? (
           <button className="primary-button" onClick={() => setStep(step + 1)}>
             Continue
           </button>
         ) : (
           <button className="primary-button" onClick={() => onNavigate("dashboard")}>
-            Enter Dashboard
+            Enter FamilyOS
           </button>
         )}
       </div>
@@ -2142,14 +2267,15 @@ function renderRoute(
     case "overview":
       return <DashboardPage onNavigate={onNavigate} />;
     case "family":
-      return <FamilyAdminPage activeTab={familySubRoute} onTabChange={setFamilySubRoute} />;
+      return <MyHouseholdPage activeTab={familySubRoute} onTabChange={setFamilySubRoute} />;
     case "planning":
-      return <PlanningPage activeTab={planningSubRoute} onTabChange={setPlanningSubRoute} onNavigate={onNavigate} />;
+      return <JourneysPage onNavigate={onNavigate} />;
     case "investments":
-      return <Investments />;
+      return <ProductLearningPage onNavigate={onNavigate} />;
     case "ai":
+      return <FamilyAdvisorPage onNavigate={onNavigate} />;
     case "insights":
-      return <AICoachPage onNavigate={onNavigate} />;
+      return <AdvisorSummaryPage onNavigate={onNavigate} />;
     case "settings":
       return <SettingsPage />;
     default:
@@ -2158,252 +2284,431 @@ function renderRoute(
 }
 
 function DashboardPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
-  const timelineItems: Array<{
-    time: string;
-    owner: string;
-    opportunity: string;
-    priority: "High" | "Medium" | "Review";
-    route: Route;
-  }> = [
-    {
-      time: "Today",
-      owner: "Ethan",
-      opportunity: "Money habits window",
-      priority: "Medium",
-      route: "education"
-    },
-    {
-      time: "4 days",
-      owner: "Subscriptions",
-      opportunity: "Two trials convert to paid plans",
-      priority: "High",
-      route: "subscriptions"
-    },
-    {
-      time: "3 months",
-      owner: "Protection",
-      opportunity: "Review family coverage",
-      priority: "Review",
-      route: "protection"
-    },
-    {
-      time: "10 months",
-      owner: "Emma",
-      opportunity: "University transition",
-      priority: "High",
-      route: "education"
-    },
-    {
-      time: "14 months",
-      owner: "Housing",
-      opportunity: "Mortgage renewal preparation",
-      priority: "Medium",
-      route: "housing"
-    },
-    {
-      time: "This quarter",
-      owner: "Grace",
-      opportunity: "Caregiving and fraud review",
-      priority: "High",
-      route: "caregiving"
-    },
-    {
-      time: "Long term",
-      owner: "Legacy",
-      opportunity: "Document and beneficiary review",
-      priority: "Review",
-      route: "documents"
-    }
-  ];
-
-  const continueActions: Array<{
-    title: string;
-    detail: string;
-    due: string;
-    cta: string;
-    route: Route;
-  }> = [
-    {
-      title: "Review Emma's education plan",
-      detail: "Confirm tuition, rent, RESP withdrawal timing, and student banking steps.",
-      due: "Start this week",
-      cta: "Review plan",
-      route: "education"
-    },
-    {
-      title: "Confirm Grace's unusual transaction",
-      detail: "Check the permissioned care alert before the next care-budget review.",
-      due: "Due today",
-      cta: "Review alert",
-      route: "caregiving"
-    },
-    {
-      title: "Manage two trial subscriptions",
-      detail: "Meal Kit and Streaming Sports trials convert soon unless capped or cancelled.",
-      due: "4 days left",
-      cta: "Manage trials",
-      route: "subscriptions"
-    }
-  ];
-
-  const otherRecommendations = [
-    ["Ethan", "Money habits", "education"],
-    ["Grace", "Caregiving review", "caregiving"],
-    ["Housing", "Mortgage renewal", "housing"],
-    ["Subscriptions", "Trial ending", "subscriptions"]
+  const upcomingMoments = [
+    ["4 days", "Subscription trials convert", "Set a cap or cancel before charges begin.", "subscriptions"],
+    ["This quarter", "Grace care review", "Review permissioned care spending and fraud alerts.", "caregiving"],
+    ["10 months", "Emma university", "Prepare tuition, rent, RESP, and student banking.", "ai"],
+    ["14 months", "Mortgage renewal", "Start gathering renewal questions and rate scenarios.", "housing"]
   ] as const;
 
   return (
-    <main className="family-dashboard">
-      <section className="agent-home-card">
-        <div className="agent-home-content">
-          <span className="section-kicker">FamilyOS scan complete</span>
+    <main className="concierge-home">
+      <section className="concierge-greeting-card">
+        <div>
+          <span className="section-kicker">AI household financial concierge</span>
           <h2>Good afternoon, Alex.</h2>
-          <p>FamilyOS completed today's family scan and found the best place to start.</p>
-
-          <div className="scan-metric-row">
-            {[
-              ["5", "family members reviewed"],
-              ["12", "opportunities detected"],
-              ["4", "actions recommended"]
-            ].map(([value, label]) => (
-              <article key={label}>
-                <strong>{value}</strong>
-                <span>{label}</span>
-              </article>
-            ))}
-          </div>
-
-          <div className="start-here-panel">
-            <span>Start here</span>
-            <h3>Emma starts university in 10 months.</h3>
-            <p>FamilyOS detected an active RESP, an education goal, and a projected first-year funding gap.</p>
-            <strong>Projected gap: $7,800</strong>
-            <div>
-              <button className="primary-button compact" onClick={() => onNavigate("education")}>
-                Review Education Plan
+          <p>
+            Your household looks mostly on track today. I found one thing worth planning together, and we can take it
+            one step at a time.
+          </p>
+          <div className="concierge-priority">
+            <span>Today's household priority</span>
+            <h3>Emma starts university in about 10 months.</h3>
+            <p>Would you like to spend 3 minutes preparing tuition, rent, RESP timing, and student banking?</p>
+            <div className="concierge-actions">
+              <button className="primary-button" onClick={() => onNavigate("ai")}>
+                Let's start
               </button>
-              <button className="secondary-button compact" onClick={() => onNavigate("ai")}>
-                View all recommendations
+              <button className="secondary-button" onClick={() => onNavigate("planning")}>
+                Show me other household moments
               </button>
             </div>
           </div>
         </div>
-        <div className="agent-home-visual">
+        <figure className="concierge-small-visual">
           <img src={educationImage} alt="Parent and student reviewing education planning" />
-          <div>
-            <Sparkles size={18} />
-            <span>Best next action found</span>
-          </div>
-        </div>
+          <figcaption>FamilyOS noticed Emma's next big transition.</figcaption>
+        </figure>
       </section>
 
-      <section className="todays-opportunity">
+      <section className="concierge-section two-column">
+        <Panel title="Continue current journey">
+          <div className="journey-continue-card">
+            <span>Emma University Journey</span>
+            <h3>Step 3: Review available funding</h3>
+            <ProgressBar label="Journey progress" value={48} />
+            <p>You have already reviewed the situation and first-year cost estimate.</p>
+            <button className="primary-button compact" onClick={() => onNavigate("ai")}>
+              Continue journey
+            </button>
+          </div>
+        </Panel>
+        <Panel title="Saved plans">
+          <div className="saved-plan-list">
+            {[
+              ["Education plan", "Draft saved today"],
+              ["Subscription cleanup", "2 trials to review"],
+              ["Care plan", "Grace alert pending"]
+            ].map(([title, detail]) => (
+              <article key={title}>
+                <CheckCircle2 size={17} />
+                <div>
+                  <strong>{title}</strong>
+                  <span>{detail}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </Panel>
+      </section>
+
+      <section className="concierge-section">
         <div className="section-heading">
-          <h2>Today's Top Opportunity</h2>
-          <p>Here's where FamilyOS recommends starting today.</p>
+          <h2>Upcoming household moments</h2>
+          <p>You do not need to plan everything today. FamilyOS will keep these visible when they matter.</p>
         </div>
-        <article className="top-opportunity-card">
-          <div>
-            <span className="priority-pill high">High priority</span>
-            <h3>Emma Chen - University transition</h3>
-            <dl>
-              <div>
-                <dt>Trigger</dt>
-                <dd>Turns 18 before first-year tuition</dd>
-              </div>
-              <div>
-                <dt>Why now</dt>
-                <dd>University planning needs tuition, rent, RESP withdrawal, student banking, and credit education within the next 10-12 months.</dd>
-              </div>
-              <div>
-                <dt>Recommended next action</dt>
-                <dd>Review Education Plan</dd>
-              </div>
-            </dl>
-          </div>
-          <aside>
-            <span>Related FamilyOS module</span>
-            <strong>Planning - Education</strong>
-            <span>Related CIBC support</span>
-            <strong>RESP, Student Banking, Advisor meeting</strong>
-            <span>Data source</span>
-            <strong>Family profile + verified RESP data</strong>
-            <span>Confidence</span>
-            <strong>High</strong>
-            <button className="primary-button compact" onClick={() => onNavigate("education")}>
-              Review Education Plan
-            </button>
-          </aside>
-        </article>
-        <div className="other-recommendations-row">
-          <span>Other recommendations</span>
-          {otherRecommendations.map(([owner, label, route]) => (
-            <button key={`${owner}-${label}`} onClick={() => onNavigate(route as Route)}>
-              <strong>{owner}</strong>
-              {label}
+        <div className="household-moment-strip">
+          {upcomingMoments.map(([time, title, detail, route]) => (
+            <button key={title} onClick={() => onNavigate(route as Route)}>
+              <span>{time}</span>
+              <strong>{title}</strong>
+              <small>{detail}</small>
             </button>
           ))}
         </div>
-      </section>
-
-      <section className="card calm-card timeline-card">
-        <div className="card-title-row">
-          <div>
-            <h2>Upcoming Family Timeline</h2>
-            <p>What is coming next, and when your family may need to act.</p>
-          </div>
-        </div>
-        <div className="agent-timeline">
-          {timelineItems.map((item) => (
-            <article key={`${item.time}-${item.opportunity}`} className={item.priority.toLowerCase()}>
-              <i />
-              <div>
-                <span>{item.time}</span>
-                <strong>{item.owner}</strong>
-                <p>{item.opportunity}</p>
-              </div>
-              <button onClick={() => onNavigate(item.route)}>View</button>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="card calm-card">
-        <div className="card-title-row">
-          <div>
-            <h2>Continue where you left off</h2>
-            <p>Practical actions FamilyOS queued from today's scan.</p>
-          </div>
-        </div>
-        <div className="action-queue-grid">
-          {continueActions.map((action) => (
-            <article key={action.title}>
-              <span>{action.due}</span>
-              <h3>{action.title}</h3>
-              <p>{action.detail}</p>
-              <button className="secondary-button compact" onClick={() => onNavigate(action.route)}>
-                {action.cta}
-              </button>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="card calm-card compact-readiness-card">
-        <div className="card-title-row">
-          <div>
-            <h2>Family Readiness Snapshot</h2>
-            <p>A compact status view. FamilyOS keeps the recommendation focus above.</p>
-          </div>
-          <button className="secondary-button compact" onClick={() => onNavigate("planning")}>
-            Open Family Status
-          </button>
-        </div>
-        <ReadinessMatrix compact />
       </section>
     </main>
   );
+}
+
+function FamilyAdvisorPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  const [selectedPrompt, setSelectedPrompt] = useState("Prepare Emma for university");
+  const prompts = [
+    "Prepare Emma for university",
+    "Review Grace's care plan",
+    "Understand investment options",
+    "Plan for mortgage renewal",
+    "Improve household cash flow",
+    "I'm not sure - guide me"
+  ];
+
+  return (
+    <main className="family-advisor-page">
+      <section className="advisor-welcome-card">
+        <div>
+          <span className="section-kicker">Family Advisor</span>
+          <h2>What would you like to work on today?</h2>
+          <p>
+            FamilyOS helps households understand what is happening, identify what matters next, and take the next step
+            with CIBC.
+          </p>
+        </div>
+        <SmallIllustration image={onboardingImage} caption="A guided place to work through household decisions." />
+      </section>
+
+      <section className="advisor-prompt-grid">
+        {prompts.map((prompt) => (
+          <button key={prompt} className={selectedPrompt === prompt ? "active" : ""} onClick={() => setSelectedPrompt(prompt)}>
+            <Sparkles size={18} />
+            <span>{prompt}</span>
+          </button>
+        ))}
+      </section>
+
+      {selectedPrompt === "Prepare Emma for university" ? (
+        <EmmaUniversityJourney onNavigate={onNavigate} />
+      ) : (
+        <section className="concierge-placeholder">
+          <span className="section-kicker">Guided journey</span>
+          <h2>{selectedPrompt}</h2>
+          <p>FamilyOS will walk through this one step at a time. For the demo, the strongest complete path is Emma's university journey.</p>
+          <button className="primary-button" onClick={() => setSelectedPrompt("Prepare Emma for university")}>
+            Open Emma University Journey
+          </button>
+        </section>
+      )}
+    </main>
+  );
+}
+
+function EmmaUniversityJourney({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  const [journeyStep, setJourneyStep] = useState(0);
+  const steps = [
+    "Understand situation",
+    "Estimate first-year cost",
+    "Review funding",
+    "Learn CIBC options",
+    "Compare strategies",
+    "AI summary",
+    "Save / advisor"
+  ];
+  const costRows = [
+    ["Tuition", "$12,500"],
+    ["Rent", "$13,800"],
+    ["Books", "$1,200"],
+    ["Food / transport / personal", "$10,200"],
+    ["One-time setup costs", "$1,800"]
+  ];
+  const fundingRows = [
+    ["RESP balance", "$32,000"],
+    ["Available monthly cash flow", "$3,860"],
+    ["Parent support plan", "$850/month"],
+    ["Estimated first-year gap", "$7,800"]
+  ];
+
+  return (
+    <section className="emma-journey">
+      <div className="journey-intro">
+        <div>
+          <span className="section-kicker">Emma University Journey</span>
+          <h2>Emma starts university in about 10 months.</h2>
+          <p>Let's make this easier by walking through one step at a time.</p>
+        </div>
+        <SmallIllustration image={educationImage} caption="Education planning becomes easier when it is broken into small steps." />
+      </div>
+
+      <div className="journey-progress">
+        {steps.map((stepLabel, index) => (
+          <button key={stepLabel} className={index === journeyStep ? "active" : index < journeyStep ? "complete" : ""} onClick={() => setJourneyStep(index)}>
+            <span>{index + 1}</span>
+            {stepLabel}
+          </button>
+        ))}
+      </div>
+
+      <article className="journey-step-card">
+        {journeyStep === 0 && (
+          <>
+            <h3>Step 1: Understand the situation</h3>
+            <p>FamilyOS noticed Emma's age, the university timeline, an active RESP, and an incomplete rent budget.</p>
+            <div className="journey-fact-grid">
+              {[
+                ["Emma", "17, daughter"],
+                ["Timeline", "University in about 10 months"],
+                ["RESP", "$32,000"],
+                ["Student banking", "Not yet reviewed"],
+                ["Rent budget", "Not completed"]
+              ].map(([label, value]) => (
+                <MetricTile key={label} label={label} value={value} />
+              ))}
+            </div>
+          </>
+        )}
+        {journeyStep === 1 && (
+          <>
+            <h3>Step 2: Estimate first-year cost</h3>
+            <p>These are planning estimates, not commitments. You can adjust them later.</p>
+            <DataTable headers={["Cost area", "Estimate"]} rows={costRows} />
+          </>
+        )}
+        {journeyStep === 2 && (
+          <>
+            <h3>Step 3: Review available funding</h3>
+            <p>FamilyOS compares available funding with near-term liquidity so tuition planning does not weaken emergency cash.</p>
+            <DataTable headers={["Funding source", "Planning value"]} rows={fundingRows} />
+          </>
+        )}
+        {journeyStep === 3 && (
+          <>
+            <h3>Step 4: Learn relevant CIBC options</h3>
+            <p>Before comparing strategies, FamilyOS explains products in plain language.</p>
+            <ProductLearningGrid compact />
+          </>
+        )}
+        {journeyStep === 4 && (
+          <>
+            <h3>Step 5: Compare possible strategies</h3>
+            <p>Explore trade-offs between liquidity, principal protection, and market uncertainty.</p>
+            <button className="primary-button" onClick={() => onNavigate("investments")}>
+              Open Product Learning & Strategy Builder
+            </button>
+          </>
+        )}
+        {journeyStep === 5 && (
+          <>
+            <h3>Step 6: AI Summary</h3>
+            <div className="advisor-summary-plain">
+              <strong>Recommended educational path</strong>
+              <p>Start with RESP withdrawal review, student banking setup, and a short-term savings strategy that preserves liquidity.</p>
+              <strong>Key risks</strong>
+              <p>Rent could be higher than expected, market-linked products may not fit near-term tuition timing, and advisor review is needed before product decisions.</p>
+              <strong>Questions for advisor</strong>
+              <p>RESP withdrawal timing, whether a cashable or non-redeemable GIC fits, and how much parent support should be automated.</p>
+            </div>
+          </>
+        )}
+        {journeyStep === 6 && (
+          <>
+            <h3>Step 7: Save and prepare for advisor review</h3>
+            <p>Nice work. Emma's education plan is clearer now.</p>
+            <div className="advisor-action-row">
+              <button className="primary-button">Save this plan</button>
+              <button className="secondary-button" onClick={() => onNavigate("insights")}>Open Advisor Summary</button>
+              <button className="secondary-button">Share with household member</button>
+              <button className="ghost-button" onClick={() => onNavigate("dashboard")}>Return home</button>
+            </div>
+          </>
+        )}
+        <div className="journey-step-actions">
+          <button className="secondary-button compact" disabled={journeyStep === 0} onClick={() => setJourneyStep(Math.max(0, journeyStep - 1))}>
+            Back
+          </button>
+          <button className="primary-button compact" disabled={journeyStep === steps.length - 1} onClick={() => setJourneyStep(Math.min(steps.length - 1, journeyStep + 1))}>
+            Continue
+          </button>
+        </div>
+      </article>
+    </section>
+  );
+}
+
+function JourneysPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  const moments = [
+    ["Emma", "University in 10 months", "FamilyOS noticed an active RESP, an education goal, and a rent budget still to complete.", "Start journey", "ai"],
+    ["Ethan", "Money habit learning window", "Age 11 is a useful moment for savings goals, allowance rhythm, and simple spending reflection.", "Create habit plan", "education"],
+    ["Grace", "Caregiving and fraud protection", "Care spending increased and an unusual transaction needs permissioned review.", "Review care plan", "caregiving"],
+    ["Alex + Jamie", "Mortgage renewal preparation", "Renewal is approaching in 14 months, while education and caregiving costs overlap.", "Plan renewal", "housing"],
+    ["Household", "Subscription cleanup opportunity", "Two free trials convert soon and duplicate streaming services may overlap.", "Manage subscriptions", "subscriptions"]
+  ] as const;
+
+  return (
+    <main className="module-page journey-page">
+      <section className="module-hero with-image">
+        <div className="module-hero-copy">
+          <div className="module-icon"><Sparkles size={28} /></div>
+          <div>
+            <span>Household Moments</span>
+            <h2>FamilyOS noticed these moments in your household.</h2>
+            <p>Life stages are not always age-based. FamilyOS uses age, goals, accounts, events, and permissions as signals.</p>
+          </div>
+        </div>
+        <img className="module-art" src={onboardingImage} alt="Family reviewing household moments" />
+      </section>
+      <div className="household-moment-grid">
+        {moments.map(([owner, title, detail, cta, route]) => (
+          <article key={title}>
+            <span>{owner}</span>
+            <h3>{title}</h3>
+            <p>{detail}</p>
+            <div>
+              <small>Related CIBC support</small>
+              <strong>{title.includes("University") ? "RESP, Student Banking, Advisor meeting" : "Existing CIBC tools and advisor prompts"}</strong>
+            </div>
+            <button className="primary-button compact" onClick={() => onNavigate(route as Route)}>{cta}</button>
+          </article>
+        ))}
+      </div>
+    </main>
+  );
+}
+
+function ProductLearningPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  const [showStrategyBuilder, setShowStrategyBuilder] = useState(false);
+  return (
+    <main className="product-learning-page">
+      <section className="module-hero with-image">
+        <div className="module-hero-copy">
+          <div className="module-icon"><PiggyBank size={28} /></div>
+          <div>
+            <span>Product Learning</span>
+            <h2>Understand options before making decisions.</h2>
+            <p>FamilyOS explains trade-offs in plain language, then prepares questions for advisor review.</p>
+          </div>
+        </div>
+        <img className="module-art" src={legacyImage} alt="Financial documents and planning notes arranged neatly" />
+      </section>
+      <ProductLearningGrid />
+      <section className="strategy-builder-entry">
+        <div>
+          <span className="section-kicker">Strategy Builder</span>
+          <h2>Ready to compare possible paths?</h2>
+          <p>Explore illustrative scenarios for Emma's education timeline. This is educational and should be reviewed with a CIBC advisor.</p>
+        </div>
+        <button className="primary-button" onClick={() => setShowStrategyBuilder(!showStrategyBuilder)}>
+          {showStrategyBuilder ? "Hide Strategy Builder" : "Open Strategy Builder"}
+        </button>
+      </section>
+      {showStrategyBuilder && <GoalAdvisorConversation />}
+      <div className="advisor-action-row">
+        <button className="secondary-button" onClick={() => onNavigate("ai")}>Return to Family Advisor</button>
+      </div>
+    </main>
+  );
+}
+
+function ProductLearningGrid({ compact = false }: { compact?: boolean }) {
+  const products = [
+    ["RESP", "Education savings account for a child's post-secondary costs.", "Education planning", "Grant rules, withdrawal timing, advisor review"],
+    ["Student banking", "Everyday banking designed for student life.", "Account ownership and spending habits", "Credit education and consent reset"],
+    ["Cashable GIC", "A lower-return savings option that lets you access money more easily.", "Short-term goals and liquidity", "Lower return than locked options"],
+    ["Non-redeemable GIC", "A locked savings option with more predictable return.", "Known timelines", "Funds are locked until maturity"],
+    ["Market Linked GIC", "Principal protection with return linked to market performance.", "Longer timelines and upside education", "Return is uncertain and advisor review matters"],
+    ["TFSA", "A flexible registered account where growth may be tax-free.", "Eligible adults and medium-term goals", "Contribution room must be confirmed"],
+    ["Mutual Funds", "Professionally managed diversified investments.", "Longer-term growth goals", "Market value can move up or down"],
+    ["Portfolio Solutions", "All-in-one managed portfolio using funds or ETFs.", "Diversified long-term planning", "Suitability and risk profile review"]
+  ];
+  const visibleProducts = compact ? products.slice(0, 6) : products;
+  return (
+    <div className="product-learning-grid">
+      {visibleProducts.map(([name, explanation, goodFor, watchOut]) => (
+        <article key={name}>
+          <span>{name}</span>
+          <p>{explanation}</p>
+          <div>
+            <strong>Good for</strong>
+            <small>{goodFor}</small>
+          </div>
+          <div>
+            <strong>Watch out for</strong>
+            <small>{watchOut}</small>
+          </div>
+          <button className="secondary-button compact">Discuss with advisor</button>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function AdvisorSummaryPage({ onNavigate }: { onNavigate: (route: Route) => void }) {
+  return (
+    <main className="advisor-summary-page">
+      <section className="advisor-ready-card">
+        <div>
+          <span className="section-kicker">Advisor Summary</span>
+          <h2>Emma University Preparation</h2>
+          <p>This summary helps the Chen family arrive at an advisor conversation more prepared.</p>
+        </div>
+        <SmallIllustration image={educationImage} caption="A clearer plan means a better conversation." />
+      </section>
+      <div className="advisor-summary-grid">
+        <Panel title="Household">
+          <p>Chen Family: Alex, Jamie, Emma, Ethan, and Grace.</p>
+        </Panel>
+        <Panel title="Main topic">
+          <p>Emma starts university in about 10 months.</p>
+        </Panel>
+        <Panel title="What FamilyOS reviewed">
+          <ul className="task-list">
+            {["University timeline", "RESP balance", "Estimated first-year cost", "Household cash flow", "Liquidity preference", "Relevant CIBC product options"].map((item) => (
+              <li key={item}><CheckCircle2 size={16} />{item}</li>
+            ))}
+          </ul>
+        </Panel>
+        <Panel title="What the family may want to discuss">
+          <ul className="task-list">
+            {["RESP withdrawal timing", "Student banking", "Short-term savings options", "Whether advisor-reviewed products fit the timeline", "Parent support plan"].map((item) => (
+              <li key={item}><CheckCircle2 size={16} />{item}</li>
+            ))}
+          </ul>
+        </Panel>
+      </div>
+      <div className="advisor-action-row">
+        <button className="primary-button">Book advisor</button>
+        <button className="secondary-button">Save summary</button>
+        <button className="secondary-button" onClick={() => onNavigate("dashboard")}>Return home</button>
+      </div>
+    </main>
+  );
+}
+
+function MyHouseholdPage({
+  activeTab,
+  onTabChange
+}: {
+  activeTab: FamilySubRoute;
+  onTabChange: (subRoute: FamilySubRoute) => void;
+}) {
+  return <FamilyAdminPage activeTab={activeTab} onTabChange={onTabChange} />;
 }
 
 function FamilyAdminPage({
@@ -2998,7 +3303,26 @@ type AdvisorRisk = "Conservative" | "Balanced" | "Growth";
 type StrategyName = "Conservative" | "Balanced" | "Growth";
 type AdvisorProductId = "cashable" | "noncashable" | "fund" | "portfolio";
 type ConversationStep = "recommend" | "customize" | "compare" | "scenario" | "action";
-type ConversationProductId = "cashable" | "noncashable" | "resp" | "tfsa" | "fund" | "portfolio";
+type ConversationProductId =
+  | "bonusGic"
+  | "flexibleGic"
+  | "variableGic"
+  | "easyBuilder"
+  | "marketLinkedGic"
+  | "ppn"
+  | "mutualFunds"
+  | "etfs"
+  | "portfolioSolutions";
+type ConversationProductShape =
+  | "fixed"
+  | "flexible"
+  | "variable"
+  | "ladder"
+  | "marketLinked"
+  | "protectedNote"
+  | "mutualFund"
+  | "etf"
+  | "portfolio";
 type MarketOutlook = "conservative" | "base" | "optimistic" | "custom";
 type RateEnvironment = "similar" | "moderate" | "increase" | "decrease" | "custom";
 
@@ -3441,8 +3765,8 @@ function Investments() {
               <div className="advisor-disclaimer">
                 <AlertTriangle size={17} />
                 <span>
-                  Projected returns are estimates based on illustrative prototype assumptions. Actual rates, eligibility, tax treatment,
-                  ownership rules, and product suitability should be confirmed with a CIBC advisor.
+                  Projected values are illustrative only. Actual rates, eligibility, tax treatment, market performance, and suitability
+                  should be reviewed with a CIBC advisor.
                 </span>
               </div>
             </div>
@@ -3462,7 +3786,7 @@ function GoalAdvisorExperience() {
   const [liquidityPreference, setLiquidityPreference] = useState<AdvisorPreference>("Balanced");
   const [riskPreference, setRiskPreference] = useState<AdvisorRisk>("Balanced");
   const [marketOutlook, setMarketOutlook] = useState<MarketOutlook>("base");
-  const [rateEnvironment, setRateEnvironment] = useState<RateEnvironment>("moderate");
+  const [rateEnvironment, setRateEnvironment] = useState<RateEnvironment>("similar");
   const [showAdvancedMarket, setShowAdvancedMarket] = useState(false);
   const [showAdvancedRate, setShowAdvancedRate] = useState(false);
   const [expectedMarketReturn, setExpectedMarketReturn] = useState(7);
@@ -3925,8 +4249,8 @@ function GoalAdvisorExperience() {
       <div className="advisor-disclaimer">
         <AlertTriangle size={17} />
         <span>
-          Projected returns are estimates based on illustrative prototype assumptions. Actual rates, eligibility, tax treatment,
-          ownership rules, and product suitability should be confirmed with a CIBC advisor.
+          Projected values are illustrative only. Actual rates, eligibility, tax treatment, market performance, and suitability should be
+          reviewed with a CIBC advisor.
         </span>
       </div>
     </main>
@@ -3944,7 +4268,7 @@ function GoalAdvisorConversation() {
   const [liquidityPreference, setLiquidityPreference] = useState<AdvisorPreference>("Balanced");
   const [riskPreference, setRiskPreference] = useState<AdvisorRisk>("Balanced");
   const [marketOutlook, setMarketOutlook] = useState<MarketOutlook>("base");
-  const [rateEnvironment, setRateEnvironment] = useState<RateEnvironment>("moderate");
+  const [rateEnvironment, setRateEnvironment] = useState<RateEnvironment>("similar");
   const [showAdvancedMarket, setShowAdvancedMarket] = useState(false);
   const [showAdvancedRate, setShowAdvancedRate] = useState(false);
   const [expectedMarketReturn, setExpectedMarketReturn] = useState(7);
@@ -3952,12 +4276,15 @@ function GoalAdvisorConversation() {
   const [actionProgress, setActionProgress] = useState(0);
   const [advisorNotice, setAdvisorNotice] = useState("");
   const [activeProducts, setActiveProducts] = useState<Record<ConversationProductId, boolean>>({
-    cashable: true,
-    noncashable: true,
-    resp: true,
-    tfsa: true,
-    fund: true,
-    portfolio: true
+    bonusGic: true,
+    flexibleGic: true,
+    variableGic: true,
+    easyBuilder: true,
+    marketLinkedGic: true,
+    ppn: true,
+    mutualFunds: true,
+    etfs: true,
+    portfolioSolutions: true
   });
 
   useEffect(() => {
@@ -3997,10 +4324,9 @@ function GoalAdvisorConversation() {
     note: string;
     recommended?: boolean;
   }> = [
-    { id: "similar", label: "Rates stay similar", value: 3.25, note: "Little change" },
-    { id: "moderate", label: "Moderate increase", value: 3.75, note: "AI base case", recommended: true },
-    { id: "increase", label: "Significant increase", value: 4.75, note: "Higher-rate stress test" },
-    { id: "decrease", label: "Significant decrease", value: 2.5, note: "Lower-rate scenario" }
+    { id: "decrease", label: "Lower", value: 2.5, note: "Prime-rate relief" },
+    { id: "similar", label: "Similar", value: 3.25, note: "AI base case", recommended: true },
+    { id: "increase", label: "Higher", value: 4.75, note: "Higher-rate stress test" }
   ];
   const marketOutlookLabel =
     marketOutlookOptions.find((option) => option.id === marketOutlook)?.label ?? `Custom ${expectedMarketReturn.toFixed(1)}%`;
@@ -4024,67 +4350,107 @@ function GoalAdvisorConversation() {
     rate: number;
     band: number;
     fixed: boolean;
-    shape: "stable" | "ladder" | "education" | "market" | "managed";
+    legend: string;
+    shape: ConversationProductShape;
   }> = [
     {
-      id: "cashable",
-      name: "Cashable GIC",
-      category: "Flexible reserve",
+      id: "bonusGic",
+      name: "Bonus Rate GIC",
+      category: "Non-redeemable fixed",
       color: "#3f7ee8",
-      rate: cashableRate,
-      band: 0.08,
-      fixed: true,
-      shape: "stable"
-    },
-    {
-      id: "noncashable",
-      name: "Non-cashable GIC",
-      category: "Planned maturity",
-      color: "#bc8b2e",
       rate: nonCashableRate,
       band: 0.05,
       fixed: true,
+      legend: "Locked fixed",
+      shape: "fixed"
+    },
+    {
+      id: "flexibleGic",
+      name: "Flexible GIC",
+      category: "Cashable fixed",
+      color: "#bc8b2e",
+      rate: cashableRate,
+      band: 0.08,
+      fixed: true,
+      legend: "Cashable fixed",
+      shape: "flexible"
+    },
+    {
+      id: "variableGic",
+      name: "Variable Rate GIC",
+      category: "Prime-linked",
+      color: "#2f9f86",
+      rate: Math.max(2.15, primeRate - 0.2),
+      band: 0.45,
+      fixed: true,
+      legend: "Prime-linked",
+      shape: "variable"
+    },
+    {
+      id: "easyBuilder",
+      name: "EasyBuilder GIC",
+      category: "1-5 year ladder",
+      color: "#8b6fce",
+      rate: 3.75,
+      band: 0.1,
+      fixed: true,
+      legend: "Laddered",
       shape: "ladder"
     },
     {
-      id: "resp",
-      name: "RESP",
-      category: "Education account",
+      id: "marketLinkedGic",
+      name: "Market Linked GIC",
+      category: "Protected upside band",
       color: "#db7aa2",
-      rate: expectedMarketReturn + 0.8,
-      band: 2.15,
+      rate: expectedMarketReturn * 0.72,
+      band: Math.max(1.6, expectedMarketReturn * 0.34),
       fixed: false,
-      shape: "education"
+      legend: "Protected band",
+      shape: "marketLinked"
     },
     {
-      id: "tfsa",
-      name: "TFSA",
-      category: "Tax-free savings",
-      color: "#2f9f86",
-      rate: expectedMarketReturn,
-      band: 2,
+      id: "ppn",
+      name: "Principal Protected Note",
+      category: "Protected note",
+      color: "#c85d3f",
+      rate: expectedMarketReturn * 0.82,
+      band: Math.max(1.8, expectedMarketReturn * 0.36),
       fixed: false,
-      shape: "market"
+      legend: "Protected band",
+      shape: "protectedNote"
     },
     {
-      id: "fund",
-      name: "Balanced Fund",
+      id: "mutualFunds",
+      name: "Mutual Funds",
       category: "Market-linked",
       color: "#49a76f",
-      rate: expectedMarketReturn + 0.25,
-      band: 2.25,
+      rate: expectedMarketReturn + 0.45,
+      band: Math.max(2.4, expectedMarketReturn * 0.38),
       fixed: false,
-      shape: "market"
+      legend: "Volatile band",
+      shape: "mutualFund"
     },
     {
-      id: "portfolio",
-      name: "Managed Portfolio",
-      category: "Advisor-managed",
-      color: "#870f2d",
+      id: "etfs",
+      name: "ETFs",
+      category: "Market traded",
+      color: "#2c7fb8",
       rate: expectedMarketReturn + 0.75,
-      band: 2.6,
+      band: Math.max(3.1, expectedMarketReturn * 0.48),
       fixed: false,
-      shape: "managed"
+      legend: "Higher volatility",
+      shape: "etf"
+    },
+    {
+      id: "portfolioSolutions",
+      name: "Portfolio Solutions",
+      category: "Managed diversified",
+      color: "#870f2d",
+      rate: expectedMarketReturn + 0.25,
+      band: Math.max(1.8, expectedMarketReturn * 0.28),
+      fixed: false,
+      legend: "Diversified band",
+      shape: "portfolio"
     }
   ];
 
@@ -4095,33 +4461,62 @@ function GoalAdvisorConversation() {
     { label: "1Y", year: 1 },
     { label: "2Y", year: 2 },
     { label: "3Y", year: 3 },
-    { label: "4Y", year: 4 }
+    { label: "4Y", year: 4 },
+    { label: "5Y", year: 5 }
   ];
-  const comparisonSeriesYears = Array.from({ length: 17 }, (_, index) => index / 4);
-  const comparisonHorizon = 4;
+  const comparisonSeriesYears = Array.from({ length: 21 }, (_, index) => index / 4);
+  const comparisonHorizon = 5;
   const getProductValue = (product: (typeof productOptions)[number], year: number, rate = product.rate) => {
     const annualRate = Math.max(0.01, rate) / 100;
+    const progress = year / comparisonHorizon;
     const marketPulse =
       investmentAmount *
-      (year / comparisonHorizon) *
+      progress *
       (Math.sin(year * 4.2) * 0.012 + Math.sin(year * 8.6 + 0.8) * 0.006);
-    if (product.shape === "stable") return investmentAmount * (1 + annualRate * year);
+    const protectedFloor = investmentAmount * (1 + 0.003 * Math.min(year, 5));
+    if (product.shape === "fixed") return investmentAmount * Math.pow(1 + annualRate, year);
+    if (product.shape === "flexible") return investmentAmount * (1 + annualRate * year * 0.92);
+    if (product.shape === "variable") {
+      const stepRate =
+        Math.max(0.01, rate + (year >= 1 ? primeRate - 3.25 : 0) * 0.18 + (year >= 3 ? (primeRate - 3.25) * 0.1 : 0)) /
+        100;
+      const stepLift = year >= 2 ? investmentAmount * stepRate * 0.35 : 0;
+      return investmentAmount * (1 + stepRate * year) + stepLift;
+    }
     if (product.shape === "ladder") {
       const base = investmentAmount * Math.pow(1 + annualRate, year);
-      const maturityBump = year >= Math.min(2, investmentHorizon) ? investmentAmount * 0.012 : 0;
+      const maturityBump =
+        (year >= 1 ? investmentAmount * 0.004 : 0) +
+        (year >= 2 ? investmentAmount * 0.006 : 0) +
+        (year >= 3 ? investmentAmount * 0.007 : 0) +
+        (year >= 4 ? investmentAmount * 0.008 : 0) +
+        (year >= 5 ? investmentAmount * 0.009 : 0);
       return base + maturityBump;
     }
-    if (product.shape === "education") {
-      const grantBoost = Math.min(1800, investmentAmount * 0.025 * Math.min(year, 2));
-      const tuitionWindowDip = year > 0.75 && year < 1.5 ? -investmentAmount * 0.006 : 0;
-      return investmentAmount * Math.pow(1 + annualRate, year) + grantBoost + marketPulse * 0.45 + tuitionWindowDip;
+    if (product.shape === "marketLinked") {
+      const upside = investmentAmount * (Math.pow(1 + annualRate, year) - 1) * (0.35 + progress * 0.75);
+      return Math.max(protectedFloor, investmentAmount + upside + marketPulse * 0.55);
     }
-    if (product.shape === "managed") {
-      const curveLift = 1 + Math.pow(year / comparisonHorizon, 1.45) * annualRate * comparisonHorizon;
-      return investmentAmount * curveLift + marketPulse * 0.85;
+    if (product.shape === "protectedNote") {
+      const upside = investmentAmount * (Math.pow(1 + annualRate, year) - 1) * (0.45 + progress * 0.9);
+      return Math.max(protectedFloor, investmentAmount + upside + marketPulse * 0.72);
     }
-    const earlyDrag = year < 1 ? -investmentAmount * 0.008 * (1 - year) : 0;
-    return investmentAmount * Math.pow(1 + annualRate, year) + earlyDrag + marketPulse;
+    if (product.shape === "mutualFund") {
+      const comp = investmentAmount * Math.pow(1 + annualRate, year);
+      const volatility = investmentAmount * progress * (Math.sin(year * 3.2 + 0.9) * 0.018 + Math.sin(year * 7.1) * 0.012);
+      return comp + volatility;
+    }
+    if (product.shape === "etf") {
+      const comp = investmentAmount * Math.pow(1 + annualRate, year);
+      const volatility = investmentAmount * progress * (Math.sin(year * 3.8 + 1.4) * 0.032 + Math.sin(year * 9.2) * 0.018);
+      return comp + volatility;
+    }
+    if (product.shape === "portfolio") {
+      const curveLift = 1 + Math.pow(progress, 1.35) * annualRate * comparisonHorizon;
+      const smootherPulse = marketPulse * 0.5 + investmentAmount * progress * Math.sin(year * 2.1) * 0.004;
+      return investmentAmount * curveLift + smootherPulse;
+    }
+    return investmentAmount * Math.pow(1 + annualRate, year);
   };
   const maxProjectedValue = Math.max(
     educationTarget * 1.18,
@@ -4749,8 +5144,8 @@ function GoalAdvisorConversation() {
       <div className="advisor-disclaimer">
         <AlertTriangle size={17} />
         <span>
-          Projected returns are estimates based on illustrative prototype assumptions. Actual rates, eligibility, tax treatment,
-          ownership rules, and product suitability should be confirmed with a CIBC advisor.
+          Projected values are illustrative only. Actual rates, eligibility, tax treatment, market performance, and suitability should be
+          reviewed with a CIBC advisor.
         </span>
       </div>
     </main>
@@ -4824,7 +5219,8 @@ function AdvisorComparisonChart({
     rate: number;
     band: number;
     fixed: boolean;
-    shape: "stable" | "ladder" | "education" | "market" | "managed";
+    legend: string;
+    shape: ConversationProductShape;
   }>;
   allProductSeries: Array<{
     id: ConversationProductId;
@@ -4834,7 +5230,8 @@ function AdvisorComparisonChart({
     rate: number;
     band: number;
     fixed: boolean;
-    shape: "stable" | "ladder" | "education" | "market" | "managed";
+    legend: string;
+    shape: ConversationProductShape;
   }>;
   activeProducts: Record<ConversationProductId, boolean>;
   setActiveProducts: (products: Record<ConversationProductId, boolean>) => void;
@@ -4846,7 +5243,8 @@ function AdvisorComparisonChart({
     rate: number;
     band: number;
     fixed: boolean;
-    shape: "stable" | "ladder" | "education" | "market" | "managed";
+    legend: string;
+    shape: ConversationProductShape;
   }) => string;
   getSeriesPoints: (product: {
     id: ConversationProductId;
@@ -4856,16 +5254,18 @@ function AdvisorComparisonChart({
     rate: number;
     band: number;
     fixed: boolean;
-    shape: "stable" | "ladder" | "education" | "market" | "managed";
+    legend: string;
+    shape: ConversationProductShape;
   }) => string;
   getRectY: (value: number) => number;
-  getProjectedY: (product: { rate: number; shape: "stable" | "ladder" | "education" | "market" | "managed" }) => number;
+  getProjectedY: (product: { rate: number; shape: ConversationProductShape }) => number;
 }) {
   const yTicks = [yAxisTop, Math.round((yAxisTop + yAxisBottom) / 2), yAxisBottom];
   const axisHeight = chartHeight - chartPadding * 2;
   const axisWidth = chartWidth - chartPadding * 2;
   const bandYTop = getRectY(targetBandHigh);
   const bandYBottom = getRectY(targetBandLow);
+  const maxTimelineYear = timeline[timeline.length - 1]?.year ?? 5;
 
   return (
     <div className="advisor-curve-card advisor-curve-card-inline">
@@ -4876,7 +5276,7 @@ function AdvisorComparisonChart({
       <svg className="advisor-curve-chart" viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label="Product comparison projection chart">
         <line x1={chartPadding} y1={chartHeight - chartPadding} x2={chartWidth - chartPadding} y2={chartHeight - chartPadding} />
         <line x1={chartPadding} y1={chartPadding} x2={chartPadding} y2={chartHeight - chartPadding} />
-        <text className="axis-title" x={chartPadding} y={chartPadding - 18}>Portfolio Value ($)</text>
+        <text className="axis-title" x={chartPadding} y={chartPadding - 18}>Projected value ($)</text>
         <rect
           className="return-comfort-band"
           x={chartPadding}
@@ -4898,7 +5298,7 @@ function AdvisorComparisonChart({
           );
         })}
         {timeline.map((tick) => {
-          const x = chartPadding + (tick.year / 4) * axisWidth;
+          const x = chartPadding + (tick.year / maxTimelineYear) * axisWidth;
           return (
             <g className="x-axis-tick" key={tick.label}>
               <line x1={x} y1={chartPadding} x2={x} y2={chartHeight - chartPadding} />
@@ -4923,7 +5323,7 @@ function AdvisorComparisonChart({
           >
             <i style={{ background: product.color }} />
             <span>{product.name}</span>
-            <small>{product.fixed ? "Stable" : "Scenario band"}</small>
+            <small>{product.legend}</small>
           </button>
         ))}
       </div>
@@ -6151,6 +6551,27 @@ function RangeSelect({
   );
 }
 
+function ChoiceGrid({ value, options, onChange }: { value: string; options: string[]; onChange: (value: string) => void }) {
+  return (
+    <div className="choice-grid">
+      {options.map((option) => (
+        <button key={option} className={value === option ? "active" : ""} onClick={() => onChange(option)}>
+          <span>{option}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SmallIllustration({ image, caption }: { image: string; caption: string }) {
+  return (
+    <figure className="small-illustration">
+      <img src={image} alt={caption} />
+      <figcaption>{caption}</figcaption>
+    </figure>
+  );
+}
+
 function StatusChip({ status }: { status: string }) {
   const normalized = status.toLowerCase().replace(/\s+/g, "-");
   return <small className={`status-chip ${normalized}`}>{status}</small>;
@@ -6220,7 +6641,7 @@ function BrandMark() {
       </div>
       <div>
         <strong>CIBC FamilyOS</strong>
-        <span>Family opportunity command center</span>
+        <span>AI household financial concierge</span>
       </div>
     </div>
   );
@@ -6656,11 +7077,15 @@ function DataTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
 
 function routeTitle(route: Route) {
   const titles: Partial<Record<Route, string>> = {
-    overview: "Dashboard",
-    insights: "Family Journey Engine",
-    ai: "Family Journey Engine"
+    dashboard: "Home",
+    overview: "Home",
+    ai: "Family Advisor",
+    planning: "Journeys",
+    investments: "Product Learning",
+    family: "My Household",
+    insights: "Advisor Summary"
   };
-  return titles[route] ?? navItems.find((item) => item.route === route)?.label ?? "Dashboard";
+  return titles[route] ?? navItems.find((item) => item.route === route)?.label ?? "Home";
 }
 
 function routeFromAction(category: string, onNavigate: (route: Route) => void) {

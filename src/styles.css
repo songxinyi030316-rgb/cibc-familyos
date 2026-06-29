@@ -6242,7 +6242,7 @@ button {
 }
 
 .advisor-preset-grid.rate-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .advisor-preset-grid button {
@@ -7468,6 +7468,432 @@ button {
   font-weight: 800;
 }
 
+.concierge-home,
+.family-advisor-page,
+.journey-page,
+.product-learning-page,
+.advisor-summary-page {
+  display: grid;
+  gap: 20px;
+}
+
+.concierge-greeting-card,
+.advisor-welcome-card,
+.advisor-ready-card,
+.journey-intro,
+.concierge-question-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.42fr);
+  gap: 28px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  padding: clamp(22px, 3vw, 34px);
+  background:
+    radial-gradient(circle at 92% 10%, rgba(185, 134, 44, 0.18), transparent 28%),
+    linear-gradient(135deg, #fff 0%, #fff8fa 100%);
+  box-shadow: var(--shadow);
+}
+
+.concierge-greeting-card h2,
+.advisor-welcome-card h2,
+.advisor-ready-card h2,
+.journey-intro h2,
+.concierge-question-card h2,
+.strategy-builder-entry h2,
+.concierge-placeholder h2 {
+  margin: 8px 0 10px;
+  font-size: clamp(28px, 3.6vw, 48px);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.concierge-greeting-card p,
+.advisor-welcome-card p,
+.advisor-ready-card p,
+.journey-intro p,
+.concierge-question-card p,
+.strategy-builder-entry p,
+.concierge-placeholder p {
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.concierge-priority,
+.first-recommendation-card,
+.journey-continue-card,
+.strategy-builder-entry,
+.concierge-placeholder {
+  border: 1px solid rgba(122, 0, 38, 0.12);
+  border-radius: 22px;
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.concierge-priority {
+  margin-top: 22px;
+  max-width: 760px;
+}
+
+.concierge-priority > span,
+.journey-continue-card > span,
+.first-recommendation-card > span {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: var(--maroon);
+  background: #fff1f5;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.concierge-priority h3,
+.journey-continue-card h3,
+.first-recommendation-card h3 {
+  margin: 12px 0 8px;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.concierge-actions,
+.advisor-action-row,
+.journey-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.small-illustration,
+.concierge-small-visual {
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid rgba(122, 0, 38, 0.12);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(55, 28, 38, 0.12);
+}
+
+.small-illustration img,
+.concierge-small-visual img {
+  display: block;
+  width: 100%;
+  height: clamp(190px, 22vw, 290px);
+  object-fit: cover;
+}
+
+.small-illustration figcaption,
+.concierge-small-visual figcaption {
+  padding: 12px 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.concierge-section {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 22px;
+  background: #fff;
+  box-shadow: 0 16px 44px rgba(55, 28, 38, 0.08);
+}
+
+.concierge-section.two-column,
+.scan-finish-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.saved-plan-list,
+.scan-list,
+.simple-member-list {
+  display: grid;
+  gap: 12px;
+}
+
+.saved-plan-list article,
+.scan-list article,
+.simple-member-list article {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  background: var(--panel-2);
+}
+
+.saved-plan-list article svg,
+.scan-list article svg {
+  color: var(--success);
+  flex: 0 0 auto;
+}
+
+.saved-plan-list strong,
+.simple-member-list strong {
+  display: block;
+}
+
+.saved-plan-list span,
+.simple-member-list span {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.household-moment-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.household-moment-strip button {
+  min-height: 150px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 18px;
+  text-align: left;
+  background: linear-gradient(180deg, #fff, #fbf9fa);
+  transition: 180ms ease;
+}
+
+.household-moment-strip button:hover,
+.advisor-prompt-grid button:hover,
+.choice-grid button:hover,
+.household-moment-grid article:hover,
+.product-learning-grid article:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(55, 28, 38, 0.11);
+}
+
+.household-moment-strip span,
+.household-moment-grid span,
+.product-learning-grid span {
+  color: var(--maroon);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.household-moment-strip strong {
+  display: block;
+  margin: 10px 0 8px;
+  font-size: 18px;
+}
+
+.household-moment-strip small {
+  color: var(--muted);
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.advisor-prompt-grid,
+.choice-grid,
+.household-moment-grid,
+.product-learning-grid,
+.journey-fact-grid,
+.advisor-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.advisor-prompt-grid button,
+.choice-grid button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 86px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  color: var(--ink);
+  background: #fff;
+  text-align: left;
+  font-weight: 900;
+  transition: 180ms ease;
+}
+
+.choice-grid button {
+  justify-content: center;
+  min-height: 64px;
+}
+
+.advisor-prompt-grid button.active,
+.choice-grid button.active {
+  border-color: rgba(122, 0, 38, 0.35);
+  color: var(--maroon);
+  background: #fff2f5;
+  box-shadow: 0 16px 34px rgba(122, 0, 38, 0.12);
+}
+
+.emma-journey {
+  display: grid;
+  gap: 18px;
+}
+
+.journey-progress,
+.concierge-stepper {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  align-items: stretch;
+}
+
+.journey-progress button,
+.concierge-stepper button {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-height: 86px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  color: var(--muted);
+  background: #fff;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.journey-progress button span,
+.concierge-stepper button span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #cfc7cc;
+}
+
+.journey-progress button.active {
+  border-color: rgba(122, 0, 38, 0.38);
+  color: var(--maroon);
+  background: #fff3f6;
+}
+
+.journey-progress button.active span,
+.journey-progress button.complete span,
+.concierge-stepper button.active span {
+  background: var(--maroon);
+}
+
+.journey-progress button.complete {
+  color: var(--success);
+  background: #f5fbf7;
+}
+
+.journey-step-card {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 24px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(55, 28, 38, 0.08);
+}
+
+.journey-step-card h3 {
+  margin: 0 0 8px;
+  font-size: 26px;
+}
+
+.journey-step-card > p,
+.advisor-summary-plain p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.advisor-summary-plain {
+  display: grid;
+  gap: 8px;
+}
+
+.advisor-summary-plain strong {
+  color: var(--maroon);
+}
+
+.strategy-builder-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.concierge-placeholder {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.household-moment-grid,
+.product-learning-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.household-moment-grid article,
+.product-learning-grid article {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 20px;
+  background: #fff;
+  transition: 180ms ease;
+}
+
+.household-moment-grid h3,
+.product-learning-grid h3,
+.product-learning-grid p,
+.household-moment-grid p {
+  margin: 0;
+}
+
+.household-moment-grid p,
+.product-learning-grid p,
+.product-learning-grid small {
+  color: var(--muted);
+  line-height: 1.5;
+  font-weight: 750;
+}
+
+.product-learning-grid div {
+  display: grid;
+  gap: 3px;
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--panel-2);
+}
+
+.advisor-summary-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.question-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.36fr);
+  gap: 22px;
+  align-items: center;
+}
+
+.concierge-onboarding .choice-grid,
+.question-layout .choice-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.concierge-onboarding .onboarding-card {
+  max-width: 1120px;
+}
+
 @media (max-width: 1180px) {
   .feature-grid,
   .family-card-grid {
@@ -7494,6 +7920,14 @@ button {
   .advisor-live-grid,
   .advisor-session-hero,
   .advisor-interactive-grid,
+  .concierge-greeting-card,
+  .advisor-welcome-card,
+  .advisor-ready-card,
+  .journey-intro,
+  .concierge-question-card,
+  .concierge-section.two-column,
+  .scan-finish-layout,
+  .question-layout,
   .gic-planner-grid,
   .investment-analysis-grid {
     grid-template-columns: 1fr;
@@ -7532,6 +7966,13 @@ button {
   .workflow-rail,
   .goal-evaluator-grid,
   .product-toggle-grid,
+  .advisor-prompt-grid,
+  .choice-grid,
+  .household-moment-strip,
+  .household-moment-grid,
+  .product-learning-grid,
+  .journey-fact-grid,
+  .advisor-summary-grid,
   .goal-choice-grid,
   .strategy-pathway-grid,
   .what-if-grid,
@@ -7631,6 +8072,15 @@ button {
   .workflow-rail,
   .goal-evaluator-grid,
   .product-toggle-grid,
+  .advisor-prompt-grid,
+  .choice-grid,
+  .household-moment-strip,
+  .household-moment-grid,
+  .product-learning-grid,
+  .journey-fact-grid,
+  .advisor-summary-grid,
+  .journey-progress,
+  .concierge-stepper,
   .what-if-grid {
     grid-template-columns: 1fr;
   }
