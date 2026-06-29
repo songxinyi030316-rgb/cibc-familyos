@@ -1693,6 +1693,9 @@ function useAppRoute(): [
       setRoute("planning");
       return;
     }
+    if (nextRoute === "planning") {
+      setPlanningSubRoute("overview");
+    }
     if (nextRoute in familyMap) {
       setFamilySubRoute(familyMap[nextRoute] ?? "members");
       setRoute("family");
@@ -2269,7 +2272,11 @@ function renderRoute(
     case "family":
       return <MyHouseholdPage activeTab={familySubRoute} onTabChange={setFamilySubRoute} onNavigate={onNavigate} />;
     case "planning":
-      return <JourneysPage onNavigate={onNavigate} />;
+      return planningSubRoute === "overview" ? (
+        <JourneysPage onNavigate={onNavigate} />
+      ) : (
+        <PlanningPage activeTab={planningSubRoute} onTabChange={setPlanningSubRoute} onNavigate={onNavigate} />
+      );
     case "investments":
       return <ProductLearningPage onNavigate={onNavigate} />;
     case "ai":
